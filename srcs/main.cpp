@@ -12,6 +12,8 @@ int main(int ac, char **av)
 		return 1;
 
 	in_port_t	port = parse_port(av[1]);
+    if (port == 0)
+        return 1;
 
 	int			socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	sockaddr_in	addr{};
