@@ -1,6 +1,6 @@
 #include "../includes/parsing.hpp"
 
-bool parse(<error type> port)
+bool parse(std::string port)
 {
     if (port)
 }
