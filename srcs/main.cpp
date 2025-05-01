@@ -15,11 +15,13 @@ int main(int ac, char **av)
 
 	int			socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	sockaddr_in	addr{};
-	// sockaddr_storage	sto{};
 
 	addr.sin_family = AF_INET;
-	addr.sin_port = port;
-	// // sto.
+	addr.sin_port = htons(port);
+	addr.sin_addr.s_addr = INADDR_ANY;
+	
+	if (bind(socket_fd, (sockaddr *)&addr, sizeof (addr)) == -1)
+		return 1;
 
 	int		fd = epoll_create1(0);
 }
