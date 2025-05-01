@@ -1,3 +1,4 @@
 #include <string>
+#include <netinet/in.h>
 
-bool parse(std::string port);
+in_port_t	parse_port(std::string port);
