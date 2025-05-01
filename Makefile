@@ -5,9 +5,10 @@ CFLAGS	+= --std=c++98
 
 DIR_DUP	= mkdir -p $(@D)
 OBJ_DIR	= .obj
+SRC_DIR	= srcs
 
-SRC		= main.cpp \
-		parsing.cpp
+SRC		= $(SRC_DIR)/main.cpp \
+		$(SRC_DIR)/parsing.cpp
 
 OBJ		:= $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 
