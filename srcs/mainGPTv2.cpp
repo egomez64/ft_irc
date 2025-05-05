@@ -55,6 +55,11 @@ int main(int argc, char** argv) {
 
     std::cout << "Client connected!" << std::endl;
 
+    const char *msg = "Hello World!\n";
+    ssize_t     sent = send(client_fd, msg, strlen(msg), MSG_NOSIGNAL);
+    if (sent == -1)
+        perror("send");
+
     // Pour garder la connexion ouverte (ctrl+C pour arrêter)
     while (true) {
         sleep(1);
