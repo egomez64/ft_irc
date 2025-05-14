@@ -7,7 +7,8 @@ DIR_DUP	= mkdir -p $(@D)
 OBJ_DIR	= .obj
 SRC_DIR	= srcs
 
-SRC		= $(SRC_DIR)/main.cpp
+SRC		= $(SRC_DIR)/main.cpp \
+		$(SRC_DIR)/Server.cpp
 
 OBJ		:= $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 

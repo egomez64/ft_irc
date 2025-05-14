@@ -1,4 +1,4 @@
-#include <Server.hpp>
+#include "../includes/Server.hpp"
 
 #define SSTR( x ) static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
 
@@ -91,11 +91,11 @@ int Server::acceptNew()
 	int				client_fd;
 	if ((client_fd = accept(socket_fd, (sockaddr*)&client_addr, &client_len)) == -1) {
 		std::perror("accept");
-		return 1;
+		return -1;
 	}
 	// // clients.insert(client_fd);
 	// Client	new_client(client_fd);
-	Client	new_client();
+	Client	new_client;
 	clients.insert(std::make_pair(client_fd, new_client));
 	std::cout << "\taccept client: " << client_fd << '\n';
 
@@ -108,7 +108,7 @@ int Server::acceptNew()
 
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1) {
 		std::perror("epoll_ctl");
-		return 1;
+		return -1;
 	}
 
 	// const char *msg = "Hello World!\n";
@@ -117,6 +117,7 @@ int Server::acceptNew()
 	// 	std::perror("send");
 	// 
 	// std::cout << "Hello\n";
+	return 0;
 }
 
 int Server::receive(int fd)
@@ -153,7 +154,7 @@ int Server::receive(int fd)
 	bytes_read = recv(fd, buf, n, 0);
 	if (bytes_read == -1) {
 		std::perror("recv");
-		return 1;
+		return -1;
 	}
 	buf[bytes_read] = '\0';
 	std::cout << "\t\tbuf: " << buf << '\n';
@@ -174,8 +175,12 @@ int Server::receive(int fd)
 	// std::cout << "Hello " << fd << '\n';
 	std::string		msg = SSTR("# " << fd << ": received.\n");
 	ssize_t sent = send(fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
-	if (sent == -1)
+	if (sent == -1) {
 		std::perror("send");
+		return -1;
+	}
+
+	return 0;
 }
 
 Server::Server(in_port_t port, const std::string &password)
@@ -194,7 +199,7 @@ Server::~Server()
 int Server::listenLoop()
 {
 	epoll_event	events[max_events];
-	bool		running;
+	bool		running = true;
 
 	while (running) {
 		sleep(5);
@@ -202,7 +207,7 @@ int Server::listenLoop()
 		int		n_fds;
 		if ((n_fds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1)) == -1) {
 			std::perror("epoll_wait");
-			break;
+			return -1;
 		}
 
 		std::cout << "epoll_wait: " << n_fds << '\n';
@@ -213,7 +218,7 @@ int Server::listenLoop()
 				std::getline(std::cin, input);
 				if (input == "quit" || input == "exit") {
 					running = false;
-					break;
+					return 0;
 				}				
 			}
 			else if (events[i].data.fd == socket_fd) {
@@ -234,4 +239,6 @@ int Server::listenLoop()
 			}
 		}
 	}
+
+	return 0;
 }
