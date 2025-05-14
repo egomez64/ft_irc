@@ -1,41 +1,46 @@
 #include "../includes/Client.hpp"
 
-int Client::GetFd(){
+int Client::getFd() const{
     return client_fd;
 }
 
-void Client::SetFd(int fd){
-    client_fd = fd;
+std::string Client::getHostname() const{
+    return this->hostname;
 }
 
-std::string Client::GetIpAdd(){
-    return this->ip_addr;
-}
-
-void Client::setIpAdd(std::string ipadd){
-    ip_addr = ipadd;
-}
-
-std::string Client::GetUsername(){
+std::string Client::getUsername() const
+{
     return this->username;
 }
 
-void Client::SetUsername(std::string usr){
-    username = usr;
-}
-
-std::string Client::GetNick(){
+std::string Client::getNickname() const{
     return this->nickname;
 }
 
-void Client::SetNick(std::string nick){
-    nickname = nick;
+std::string Client::getRealname() const{
+    return this->realname;
 }
 
-std::string Client::GetPass(){
-    return this->password;
+State Client::getState() const{
+    return this->state;
 }
 
-void Client::SetPass(std::string pass){
-    password = pass;
+void Client::setHostname(std::string host){
+    this->hostname = host;
+}
+
+void Client::setUsername(std::string usr){
+    this->username = usr;
+}
+
+void Client::setNickname(std::string nick){
+    this->nickname = nick;
+}
+
+void Client::setRealname(std::string real){
+    this->realname = real;
+}
+
+void Client::setState(State _state){
+    this->state = _state;
 }
