@@ -120,69 +120,6 @@ int Server::acceptNew()
 	return 0;
 }
 
-int Server::receive(int fd)
-{
-// 	// std::vector<char>	buff_recv;
-// 	// const std::size_t	size_recv = 10;
-// 
-// 	std::string			recv_str;
-// 	ssize_t				bytes_read;
-// 	int					i = 0;
-// // 	do {
-// // 		// buff_recv.insert(buff_recv.end(), size_recv, '\0');
-// // 		// bytes_read = recv(fd, buff_recv.data() + (buff_recv.size() - size_recv), size_recv, 0);
-// // 
-// 		const size_t	n = 10;
-// // 		// char			buf[n];
-// 		char			buf[n + 1];
-// 
-// 		bytes_read = recv(fd, buf, n, 0);
-// 		recv_str.append(buf, n);
-// 		std::cout << "\trecv " << i++ << ": " << bytes_read << '\n';
-// 		buf[n] = '\0';
-// 		std::cout << "\t\tbuf: " << buf << '\n';
-// 		std::cout << "\t\t" << recv_str << '\n';
-// // 	} while (bytes_read > 0);
-
-	// char	buff_recv[size_recv + 1];
-	// bytes_read = recv(fd, buff_recv, size_recv, 0);
-
-	ssize_t			bytes_read;
-	const size_t	n = 10;
-	// char			buf[n];
-	char			buf[n + 1];
-	bytes_read = recv(fd, buf, n, 0);
-	if (bytes_read == -1) {
-		std::perror("recv");
-		return -1;
-	}
-	buf[bytes_read] = '\0';
-	std::cout << "\t\tbuf: " << buf << '\n';
-	std::cout.flush();
-	std::cout << "\t\tbytes_read: " << bytes_read << '\n';
-	clients[fd].received.append(buf, n);
-	clients[fd].rcv_ended = (bytes_read == 0 || buf[bytes_read - 1] == '\0');
-	if (clients[fd].rcv_ended)
-		std::cout << clients[fd].received << '\n';
-	std::cout << "\t\tclient: " << clients[fd].received;
-	if (clients[fd].rcv_ended)
-		std::cout << "over";
-	std::cout << '\n';
-
-	// buff_recv[bytes_read] = '\0';
-	// std::cout << buff_recv.data() << '\n';
-
-	// std::cout << "Hello " << fd << '\n';
-	std::string		msg = SSTR("# " << fd << ": received.\n");
-	ssize_t sent = send(fd, msg.c_str(), msg.length(), MSG_NOSIGNAL);
-	if (sent == -1) {
-		std::perror("send");
-		return -1;
-	}
-
-	return 0;
-}
-
 Server::Server(in_port_t port, const std::string &password)
 	: password(password)
 {

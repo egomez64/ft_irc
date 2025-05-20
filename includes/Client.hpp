@@ -1,20 +1,31 @@
-#pragma once
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
 
 #include <iostream>
+#include <map>
+#include "Channel.hpp"
+
+class Channel;
 
 class Client
 {
-private:
-	int client_fd;
-	std::string ip_addr;
-    std::string login;
-    std::string name;
-    std::string nick_name;
-    std::string pass;
+	private:
+		int fd;
 
-public:
-	Client(){};
-	int GetFd();
-	void SetFd(int fd);
-	void setIpAdd(std::string ipadd);
+		std::string nickname;
+		std::string username;
+
+		std::map<std::string&, Channel&> channels;
+
+		static const int	buff_size = 1024;
+		char	buff[buff_size];
+		std::string	stock;
+
+		int parse_cmd();
+
+	public:
+		int receive();
+		int send(std::string &str);
 };
+
+#endif // CLIENT_HPP

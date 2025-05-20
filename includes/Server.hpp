@@ -21,12 +21,6 @@
 
 # define MAX_EVENTS 10
 
-// class Client;
-struct Client {
-	std::string		received;
-	bool			rcv_ended;
-};
-
 class Server
 {
 private:
