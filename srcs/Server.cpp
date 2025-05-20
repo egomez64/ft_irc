@@ -36,7 +36,7 @@ int Server::setSocket(in_port_t port)
 		return -1;
 	}
 
-	if (listen(socket_fd, MAX_EVENTS) == -1) {
+	if (listen(socket_fd, max_events) == -1) {
 		std::perror("listen");
 		return -1;
 	}
@@ -85,7 +85,6 @@ int Server::setEpoll()
 
 int Server::acceptNew()
 {
-	std::cout << "\tsocket_fd\n";
 	sockaddr_in		client_addr;
 	socklen_t		client_len = sizeof (client_addr);
 	int				client_fd;
@@ -93,11 +92,8 @@ int Server::acceptNew()
 		std::perror("accept");
 		return -1;
 	}
-	// // clients.insert(client_fd);
-	// Client	new_client(client_fd);
-	Client	new_client;
-	clients.insert(std::make_pair(client_fd, new_client));
-	std::cout << "\taccept client: " << client_fd << '\n';
+	Client	new_client(client_fd, *this);
+	clients.insert(std::pair<int, Client>(client_fd, new_client));
 
 	make_socket_non_blocking(client_fd);
 
@@ -110,13 +106,6 @@ int Server::acceptNew()
 		std::perror("epoll_ctl");
 		return -1;
 	}
-
-	// const char *msg = "Hello World!\n";
-	// ssize_t sent = send(client_fd, msg, strlen(msg), MSG_NOSIGNAL);
-	// if (sent == -1)
-	// 	std::perror("send");
-	// 
-	// std::cout << "Hello\n";
 	return 0;
 }
 
@@ -139,15 +128,11 @@ int Server::listenLoop()
 	bool		running = true;
 
 	while (running) {
-		sleep(5);
-		std::cout << "while running:\n";
 		int		n_fds;
-		if ((n_fds = epoll_wait(epoll_fd, events, MAX_EVENTS, -1)) == -1) {
+		if ((n_fds = epoll_wait(epoll_fd, events, max_events, -1)) == -1) {
 			std::perror("epoll_wait");
 			return -1;
 		}
-
-		std::cout << "epoll_wait: " << n_fds << '\n';
 
 		for (int i = 0; i < n_fds; i++) {
 			if (events[i].data.fd == STDIN_FILENO) {
@@ -158,24 +143,30 @@ int Server::listenLoop()
 					return 0;
 				}				
 			}
-			else if (events[i].data.fd == socket_fd) {
+			else if (events[i].data.fd == socket_fd)
 				acceptNew();
-			}
-			else if (clients.find(events[i].data.fd) != clients.end()) {
+			else if (clients.find(events[i].data.fd) != clients.end())
 				receive(events[i].data.fd);
-			}
-			else {
+			else
 				std::cout << "\tunknown event_fd: " << events[i].data.fd << '\n';
-
-				// const char	*msg = "I don't want to talk to you.\nGet out.\n";
-				// ssize_t sent = send(events[i].data.fd, msg, strlen(msg), MSG_NOSIGNAL);
-				// if (sent == -1)
-				// 	perror("send");
-
-				// std::cout << "Unwanted\n";
-			}
 		}
 	}
-
 	return 0;
+}
+
+Channel *Server::add_client_to_chan(Client &client, std::string &chan_name)
+{
+	std::map<const std::string &, Channel>::iterator	it;
+	if ((it = channels.find(chan_name)) != channels.end()) {
+		if (it->second.add_client(client) == -1)
+			return NULL;
+		return &it->second;
+	}
+	else {
+		Channel		new_chan(chan_name);
+		Channel		&inserted_chan = channels.insert(std::pair<const std::string &, Channel>(new_chan.getName(), new_chan)).first->second;
+
+		inserted_chan.add_client(client);
+		return &inserted_chan;
+	}
 }

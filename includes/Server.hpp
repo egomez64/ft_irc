@@ -19,7 +19,10 @@
 
 #define SSTR( x ) static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
 
-# define MAX_EVENTS 10
+// # define MAX_EVENTS 10
+
+# include <Client.hpp>
+# include <Channel.hpp>
 
 class Server
 {
@@ -28,7 +31,8 @@ private:
 	int			socket_fd;
 	int			epoll_fd;
 
-	std::map<int, Client>	clients;
+	std::map<int, Client>					clients;
+	std::map<const std::string&, Channel>	channels;
 
 	static const int	max_events;
 
@@ -48,6 +52,8 @@ public:
 	~Server();
 
 	int		listenLoop();
+
+	Channel		*add_client_to_chan(Client &, std::string &channel);
 };
 
 #endif // SERVER_HPP
