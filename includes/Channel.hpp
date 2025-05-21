@@ -1,10 +1,13 @@
 #ifndef CHANNEL_HPP
-#define CHANNEL_HPP
+# define CHANNEL_HPP
 
-#include <iostream>
-#include <map>
-#include <vector>
-#include <Client.hpp>
+# include <iostream>
+# include <map>
+# include <vector>
+
+# include <Client.hpp>
+
+class Client;
 
 class Channel {
 public:
@@ -27,26 +30,26 @@ private:
 	std::string		topic;
 	std::string		password;
 
-	std::map<int, Client &>	clients;
-	std::vector<int>		operators;
+	std::map<const int, Client &>	clients;
+	std::vector<int>			operators;
 
 	modes_t		modes;
 
 public:
 
 	// constructor
-	Channel(std::string &_name) : name(_name) {}
+	Channel(const std::string &_name) : name(_name) {}
 
 	// class methods
 	int		add_client(Client &);
 	// int		add_client(Client &, std::string &password);
-    int     msg(Client &, std::string &msg);
+    int     msg(const Client &, const std::string &msg);
 
-	int     kick(Client& _operator, Client& target);
-	int     invite(Client& _operator, Client& target);
-	int     change_topic(Client &, std::string &);
+	int     kick(const Client& _operator, Client& target);
+	int     invite(const Client& _operator, Client& target);
+	int     change_topic(const Client &, std::string &);
 	int     change_modes(Client &, modes_t &);
-	int     change_operator(Client& _operator, Client& target, operator_mode);
+	int     change_modes(const Client& _operator, Client& target, operator_mode);
 
 	// getters
 	const std::string	&getName() const		{ return name; }
@@ -54,9 +57,9 @@ public:
 	const std::string	&getPassword() const	{ return password; }
 
 	// setters
-	void	setName(std::string &_name)			{ name = _name; }
-	void	setTopic(std::string &_topic)		{ topic = _topic; }
-	void	setPassword(std::string &_password)	{ password = _password; }
+	void	setName(const std::string &_name)			{ name = _name; }
+	void	setTopic(const std::string &_topic)			{ topic = _topic; }
+	void	setPassword(const std::string &_password)	{ password = _password; }
 };
 
 #endif // CHANNEL_HPP

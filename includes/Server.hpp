@@ -17,12 +17,13 @@
 // # include <cerrno>
 # include <unistd.h>
 
-#define SSTR( x ) static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
-
-// # define MAX_EVENTS 10
+# define SSTR( x ) static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
 
 # include <Client.hpp>
 # include <Channel.hpp>
+
+class Client;
+class Channel;
 
 class Server
 {
@@ -31,29 +32,29 @@ private:
 	int			socket_fd;
 	int			epoll_fd;
 
-	std::map<int, Client>					clients;
+	std::map<const int, Client>				clients;
 	std::map<const std::string&, Channel>	channels;
 
 	static const int	max_events;
 
 	static int	make_socket_non_blocking(int fd);
 
-	int		setSocket(in_port_t port);
+	int		setSocket(in_port_t);
 	int		setEpoll();
 	int		acceptNew();
-	int		receive(int fd);
+	int		receive(Client &);
 	
 	Server(void);
 	Server(const Server &other);
 	Server &operator=(const Server &other);
 
 public:
-	Server(in_port_t port, const std::string &password = "");
+	Server(in_port_t, const std::string &password = "");
 	~Server();
 
 	int		listenLoop();
 
-	Channel		*add_client_to_chan(Client &, std::string &channel);
+	Channel		*add_client_to_chan(Client &, const std::string &channel);
 };
 
 #endif // SERVER_HPP

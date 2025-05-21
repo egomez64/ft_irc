@@ -1,4 +1,4 @@
-#include "../includes/Server.hpp"
+#include <Server.hpp>
 
 #define SSTR( x ) static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
 
@@ -92,8 +92,7 @@ int Server::acceptNew()
 		std::perror("accept");
 		return -1;
 	}
-	Client	new_client(client_fd, *this);
-	clients.insert(std::pair<int, Client>(client_fd, new_client));
+	clients.insert(std::pair<const int, Client>(client_fd, Client(client_fd, *this)));
 
 	make_socket_non_blocking(client_fd);
 
@@ -106,6 +105,12 @@ int Server::acceptNew()
 		std::perror("epoll_ctl");
 		return -1;
 	}
+	return 0;
+}
+
+int Server::receive(Client &client)
+{
+	client.receive();
 	return 0;
 }
 
@@ -135,6 +140,8 @@ int Server::listenLoop()
 		}
 
 		for (int i = 0; i < n_fds; i++) {
+			std::map<int, Client>::iterator	client;
+
 			if (events[i].data.fd == STDIN_FILENO) {
 				std::string		input;
 				std::getline(std::cin, input);
@@ -145,8 +152,8 @@ int Server::listenLoop()
 			}
 			else if (events[i].data.fd == socket_fd)
 				acceptNew();
-			else if (clients.find(events[i].data.fd) != clients.end())
-				receive(events[i].data.fd);
+			else if ((client = clients.find(events[i].data.fd)) != clients.end())
+				receive(client->second);
 			else
 				std::cout << "\tunknown event_fd: " << events[i].data.fd << '\n';
 		}
@@ -154,7 +161,7 @@ int Server::listenLoop()
 	return 0;
 }
 
-Channel *Server::add_client_to_chan(Client &client, std::string &chan_name)
+Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name)
 {
 	std::map<const std::string &, Channel>::iterator	it;
 	if ((it = channels.find(chan_name)) != channels.end()) {

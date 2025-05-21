@@ -2,24 +2,27 @@ NAME	= ircserv
 CC		= c++
 CFLAGS	= -Wall -Werror -Wextra
 CFLAGS	+= --std=c++98
+INCLUDE	= includes
 
 DIR_DUP	= mkdir -p $(@D)
 OBJ_DIR	= .obj
 SRC_DIR	= srcs
 
 SRC		= $(SRC_DIR)/main.cpp \
-		$(SRC_DIR)/Server.cpp
+		$(SRC_DIR)/Server.cpp \
+		$(SRC_DIR)/Client.cpp \
+		$(SRC_DIR)/Channel.cpp
 
 OBJ		:= $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	$(CC) $(CFLAGS) -I$(INCLUDE) $(OBJ) -o $(NAME)
 
 $(OBJ_DIR)/%.o: %.cpp
 	@$(DIR_DUP)
-	@$(CC) $(CFLAGS) -o $@ -c $< && printf "Compiling: $(notdir $<)\n"
+	@$(CC) $(CFLAGS) -I$(INCLUDE) -o $@ -c $< && printf "Compiling: $(notdir $<)\n"
 
 clean:
 	rm -rf $(OBJ_DIR)

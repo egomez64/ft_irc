@@ -1,7 +1,23 @@
-#include <Server.hpp>
 #include <Client.hpp>
 
-int Client::join(std::string &chan_name)
+Client::cmds Client::parse_cmd(const std::string &str)
+{
+	std::string		first_word(str, str.find_first_of(' '));
+	if (first_word == "PRIV_MSG")
+		return PRIV_MSG;
+	else if (first_word == "KICK")
+		return KICK;
+	else if (first_word == "INVITE")
+		return INVITE;
+	else if (first_word == "TOPIC")
+		return TOPIC;
+	else if (first_word == "MODE")
+		return MODE;
+	else
+		return INVALID;
+}
+
+int Client::join(const std::string &chan_name)
 {
 	Channel		*chan;
 
@@ -9,13 +25,13 @@ int Client::join(std::string &chan_name)
 		std::cout << "Couldn't add_client\n";
 		return -1;
 	}
-	channels.insert(std::pair<std::string&, Channel&>(chan_name, *chan));
+	channels.insert(std::pair<const std::string &, Channel &>(chan->getName(), *chan));
 	return 0;
 }
 
-int Client::msg_chan(std::string &chan, std::string &msg)
+int Client::msg_chan(const std::string &chan, const std::string &msg)
 {
-	std::map<std::string &, Channel &>::iterator	it;
+	std::map<const std::string &, Channel &>::iterator	it;
 
 	if ((it = channels.find(chan)) == channels.end()) {
 		std::cerr << "You're not in this channel.\n";
@@ -27,6 +43,9 @@ int Client::msg_chan(std::string &chan, std::string &msg)
 
 int Client::receive()
 {
+	static const int	buff_size = 1024;
+	char				buff[buff_size];
+
 	ssize_t	bytes_read = recv(fd, buff, buff_size, 0);
 	if (bytes_read == -1) {
 		std::perror("recv");
@@ -44,7 +63,7 @@ int Client::receive()
 	return 0;
 }
 
-int Client::send(std::string &str)
+int Client::send(const std::string &str) const
 {
 	// std::string		msg = SSTR("# " << fd << ": received.\n");
 	ssize_t	sent = ::send(fd, str.c_str(), str.length(), MSG_NOSIGNAL);
