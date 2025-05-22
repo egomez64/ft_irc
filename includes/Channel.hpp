@@ -8,6 +8,7 @@
 # include <Client.hpp>
 
 class Client;
+class Server;
 
 class Channel {
 public:
@@ -30,15 +31,17 @@ private:
 	std::string		topic;
 	std::string		password;
 
+	Server	&serv;
+
 	std::map<const int, Client &>	clients;
-	std::vector<int>			operators;
+	std::vector<int>				operators;
 
 	modes_t		modes;
 
 public:
 
 	// constructor
-	Channel(const std::string &_name) : name(_name) {}
+	Channel(const std::string &_name, Server &serv): name(_name), serv(serv) {}
 
 	// class methods
 	int		add_client(Client &);
@@ -47,9 +50,9 @@ public:
 
 	int     kick(const Client& _operator, Client& target);
 	int     invite(const Client& _operator, Client& target);
-	int     change_topic(const Client &, std::string &);
-	int     change_modes(Client &, modes_t &);
-	int     change_modes(const Client& _operator, Client& target, operator_mode);
+	int     change_topic(const Client & _operator, std::string &);
+	int     change_modes(const Client & _operator, modes_t &);
+	int     change_client_mode(const Client& _operator, Client& target, operator_mode);
 
 	// getters
 	const std::string	&getName() const		{ return name; }

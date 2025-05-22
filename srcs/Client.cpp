@@ -1,10 +1,27 @@
 #include <Client.hpp>
 
+Client::cmds Client::registering(const std::string &str)
+{
+	std::string		first_word(str, str.find_first_of(' '));
+
+	if (first_word == "CAP")
+		return CAP;
+	else if (first_word == "PASS")
+		return PASS;
+	else if (first_word == "NICK")
+		return NICK;
+	else if (first_word == "USER")
+		return USER;
+	else
+		return INVALID;
+}
+
 Client::cmds Client::parse_cmd(const std::string &str)
 {
 	std::string		first_word(str, str.find_first_of(' '));
-	if (first_word == "PRIV_MSG")
-		return PRIV_MSG;
+
+	if (first_word == "PRIVMSG")
+		return PRIVMSG;
 	else if (first_word == "KICK")
 		return KICK;
 	else if (first_word == "INVITE")
@@ -54,10 +71,18 @@ int Client::receive()
 	buff[bytes_read] = '\0';
 	stock.append(buff, bytes_read);
 
+	std::cout << fd << ": " << buff;
+	if (bytes_read >= 1 && buff[bytes_read - 1] != '\n')
+		std::cout << "$\n";
+
 	std::size_t		end_msg;
-	while ((end_msg = stock.find("\n\r")) != std::string::npos) {
+	// while ((end_msg = stock.find("\n\r")) != std::string::npos) {
+	while ((end_msg = stock.find("\n")) != std::string::npos) {
 		std::string		cmd(stock, 0, end_msg);
-		parse_cmd(cmd);
+		if (auth)
+			parse_cmd(cmd);
+		else
+			registering(cmd);
 		stock.erase(0, end_msg);
 	}
 	return 0;

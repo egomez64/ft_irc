@@ -41,7 +41,7 @@ int Server::setSocket(in_port_t port)
 		return -1;
 	}
 
-	// std::cout << "Server listening on port " << port << '\n';
+	std::cout << "Server listening on port " << port << '\n';
 
 	if (make_socket_non_blocking(socket_fd) == -1) {
 		std::perror("listen");
@@ -85,16 +85,19 @@ int Server::setEpoll()
 
 int Server::acceptNew()
 {
+	std::cout << "acceptNew {\n";
 	sockaddr_in		client_addr;
 	socklen_t		client_len = sizeof (client_addr);
 	int				client_fd;
 	if ((client_fd = accept(socket_fd, (sockaddr*)&client_addr, &client_len)) == -1) {
 		std::perror("accept");
+		std::cout << "}\n";
 		return -1;
 	}
 	clients.insert(std::pair<const int, Client>(client_fd, Client(client_fd, *this)));
+	std::cout << "Client " << client_fd << " accepted.\n";
 
-	make_socket_non_blocking(client_fd);
+	// make_socket_non_blocking(client_fd);
 
 	epoll_event		client_event;
 	std::memset(&client_event, 0, sizeof (client_event));
@@ -103,8 +106,10 @@ int Server::acceptNew()
 
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1) {
 		std::perror("epoll_ctl");
+		std::cout << "}\n";
 		return -1;
 	}
+	std::cout << "}\n";
 	return 0;
 }
 
@@ -170,7 +175,7 @@ Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name
 		return &it->second;
 	}
 	else {
-		Channel		new_chan(chan_name);
+		Channel		new_chan(chan_name, *this);
 		Channel		&inserted_chan = channels.insert(std::pair<const std::string &, Channel>(new_chan.getName(), new_chan)).first->second;
 
 		inserted_chan.add_client(client);

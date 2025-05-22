@@ -14,7 +14,11 @@ class Client
 {
 private:
 	enum cmds {
-		PRIV_MSG,
+		CAP,
+		PASS,
+		NICK,
+		USER,
+		PRIVMSG,
 		KICK,
 		INVITE,
 		TOPIC,
@@ -33,6 +37,7 @@ private:
 
 	std::string	stock;
 
+	cmds	registering(const std::string &);
 	cmds	parse_cmd(const std::string &);
 	int		join(const std::string &chan_name);
 	// int		join(std::string &chan_name, std::string &password);
