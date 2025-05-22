@@ -18,6 +18,7 @@
 # include <unistd.h>
 
 # define SSTR( x ) static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
+# define PRINT( x ) std::cout << x << '\n'
 
 # include <Client.hpp>
 # include <Channel.hpp>
@@ -54,6 +55,7 @@ public:
 
 	int		listenLoop();
 
+	bool		test_password(const std::string &);
 	Channel		*add_client_to_chan(Client &, const std::string &channel);
 };
 

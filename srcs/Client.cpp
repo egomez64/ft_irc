@@ -32,6 +32,23 @@ Client::cmds Client::parse_cmd(const std::string &str)
 		return INVALID;
 }
 
+void Client::check_auth()
+{
+	PRINT("check auth");
+	PRINT("auth: " << auth);
+	PRINT("pass: " << pass);
+	PRINT("nick: " << nickname);
+	PRINT("user: " << username);
+	auth = pass && !nickname.empty() && !username.empty();
+	PRINT("auth: " << auth);
+	if (!auth)
+		return;
+
+	std::cout << username << " \"" << nickname << "\" authentificated.\n";
+	const std::string	msg("Welcome to our Server " + username +" \"" + nickname + "\""  +  ".\n\r");
+	send(msg);
+}
+
 // enum cmds {
 // 	CAP,
 // 	PASS,
@@ -48,13 +65,30 @@ Client::cmds Client::parse_cmd(const std::string &str)
 int Client::exec_cmd(const std::string &cmd)
 {
 	std::vector<std::string>	split_cmd = split(cmd);
+	if (split_cmd.empty())
+		return -1;
 
 	switch (auth ? parse_cmd(split_cmd[0]) : parse_register(split_cmd[0]))
 	{
+	case PASS:
+		if (split_cmd.size() != 2)
+			return -1;
+		pass = serv.test_password(split_cmd[1]);
+		check_auth();
+		break;
+
 	case NICK:
+		if (split_cmd.size() != 2)
+			return -1;
+		nickname = split_cmd[1];
+		check_auth();
 		break;
 
 	case USER:
+		if (split_cmd.size() < 2)
+			return -1;
+		username = split_cmd[1];
+		check_auth();
 		break;
 
 	case INVALID:
@@ -92,6 +126,7 @@ int Client::msg_chan(const std::string &chan, const std::string &msg)
 
 int Client::receive()
 {
+	std::cout << "Client " << fd << ": receive\n";
 	static const int	buff_size = 1024;
 	char				buff[buff_size];
 
@@ -103,16 +138,12 @@ int Client::receive()
 	buff[bytes_read] = '\0';
 	stock.append(buff, bytes_read);
 
-	std::cout << fd << ": " << buff;
-	if (bytes_read >= 1 && buff[bytes_read - 1] != '\n')
-		std::cout << "$\n";
-
 	std::size_t		end_msg;
-	// while ((end_msg = stock.find("\n\r")) != std::string::npos) {
-	while ((end_msg = stock.find("\n")) != std::string::npos) {
+	while ((end_msg = stock.find("\r\n")) != std::string::npos) {
 		std::string		cmd(stock, 0, end_msg);
+		std::cout << cmd << '\n';
 		exec_cmd(cmd);
-		stock.erase(0, end_msg);
+		stock.erase(0, end_msg + 2);
 	}
 	return 0;
 }

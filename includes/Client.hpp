@@ -33,6 +33,7 @@ private:
 
 	std::string	nickname;
 	std::string	username;
+	bool		pass;
 	bool		auth;
 
 	std::map<const std::string &, Channel &>	channels;
@@ -41,13 +42,14 @@ private:
 
 	static cmds		parse_register(const std::string &);
 	static cmds		parse_cmd(const std::string &);
+	void	check_auth();
 	int		exec_cmd(const std::string &);
 	int		join(const std::string &chan_name);
 	// int		join(std::string &chan_name, std::string &password);
 	int		msg_chan(const std::string &chan, const std::string &msg);
 
 public:
-	Client(int fd, Server &serv) : fd(fd), serv(serv), auth(false) { (void)auth; };
+	Client(int fd, Server &serv) : fd(fd), serv(serv), pass(false), auth(false) { (void)auth; };
 	~Client() { /*close(fd);*/ }
 
 	int		receive();

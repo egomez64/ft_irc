@@ -85,13 +85,11 @@ int Server::setEpoll()
 
 int Server::acceptNew()
 {
-	std::cout << "acceptNew {\n";
 	sockaddr_in		client_addr;
 	socklen_t		client_len = sizeof (client_addr);
 	int				client_fd;
 	if ((client_fd = accept(socket_fd, (sockaddr*)&client_addr, &client_len)) == -1) {
 		std::perror("accept");
-		std::cout << "}\n";
 		return -1;
 	}
 	clients.insert(std::pair<const int, Client>(client_fd, Client(client_fd, *this)));
@@ -106,10 +104,8 @@ int Server::acceptNew()
 
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1) {
 		std::perror("epoll_ctl");
-		std::cout << "}\n";
 		return -1;
 	}
-	std::cout << "}\n";
 	return 0;
 }
 
@@ -143,8 +139,10 @@ int Server::listenLoop()
 			std::perror("epoll_wait");
 			return -1;
 		}
+		std::cout << "epoll_wait\n";
 
 		for (int i = 0; i < n_fds; i++) {
+			std::cout << "event: " << i << "\n";
 			std::map<int, Client>::iterator	client;
 
 			if (events[i].data.fd == STDIN_FILENO) {
@@ -164,6 +162,22 @@ int Server::listenLoop()
 		}
 	}
 	return 0;
+}
+
+bool Server::test_password(const std::string &str)
+{
+	PRINT("test: " << str);
+	PRINT("Password: " << password);
+	PRINT("return: " << (str == password));
+	for (int i = 0; str.c_str()[i] || password.c_str()[i]; i++) {
+		if (str.c_str()[i] != password.c_str()[i]) {
+			PRINT("i: " << i);
+			PRINT("test[" << i << "]: " << (int) str.c_str()[i]);
+			PRINT("Password[" << i << "]: " << (int) password.c_str()[i]);
+			break;
+		}
+	}
+	return (str == password);
 }
 
 Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name)
