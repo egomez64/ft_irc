@@ -1,18 +1,14 @@
 #include <Client.hpp>
 
-Client::cmds Client::registering(const std::string &str)
+Client::cmds Client::parse_register(const std::string &str)
 {
-	std::string		first_word;
-
-	first_word.assign(str, 0, str.find_first_of(' '));
-
-	if (first_word == "CAP")
+	if (str == "CAP")
 		return CAP;
-	else if (first_word == "PASS")
+	else if (str == "PASS")
 		return PASS;
-	else if (first_word == "NICK")
+	else if (str == "NICK")
 		return NICK;
-	else if (first_word == "USER")
+	else if (str == "USER")
 		return USER;
 	else
 		return INVALID;
@@ -20,20 +16,54 @@ Client::cmds Client::registering(const std::string &str)
 
 Client::cmds Client::parse_cmd(const std::string &str)
 {
-	std::string		first_word(str, str.find_first_of(' '));
-
-	if (first_word == "PRIVMSG")
+	if (str == "JOIN")
+		return JOIN;
+	else if (str == "PRIVMSG")
 		return PRIVMSG;
-	else if (first_word == "KICK")
+	else if (str == "KICK")
 		return KICK;
-	else if (first_word == "INVITE")
+	else if (str == "INVITE")
 		return INVITE;
-	else if (first_word == "TOPIC")
+	else if (str == "TOPIC")
 		return TOPIC;
-	else if (first_word == "MODE")
+	else if (str == "MODE")
 		return MODE;
 	else
 		return INVALID;
+}
+
+// enum cmds {
+// 	CAP,
+// 	PASS,
+// 	NICK,
+// 	USER,
+// 	PRIVMSG,
+// 	KICK,
+// 	INVITE,
+// 	TOPIC,
+// 	MODE,
+// 	INVALID,
+// };
+
+int Client::exec_cmd(const std::string &cmd)
+{
+	std::vector<std::string>	split_cmd = split(cmd);
+
+	switch (auth ? parse_cmd(split_cmd[0]) : parse_register(split_cmd[0]))
+	{
+	case NICK:
+		break;
+
+	case USER:
+		break;
+
+	case INVALID:
+		return -1;
+
+	default:
+		break;
+	}
+	return 0;
 }
 
 int Client::join(const std::string &chan_name)
@@ -81,10 +111,7 @@ int Client::receive()
 	// while ((end_msg = stock.find("\n\r")) != std::string::npos) {
 	while ((end_msg = stock.find("\n")) != std::string::npos) {
 		std::string		cmd(stock, 0, end_msg);
-		if (auth)
-			parse_cmd(cmd);
-		else
-			registering(cmd);
+		exec_cmd(cmd);
 		stock.erase(0, end_msg);
 	}
 	return 0;

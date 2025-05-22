@@ -11,7 +11,8 @@ SRC_DIR	= srcs
 SRC		= $(SRC_DIR)/main.cpp \
 		$(SRC_DIR)/Server.cpp \
 		$(SRC_DIR)/Client.cpp \
-		$(SRC_DIR)/Channel.cpp
+		$(SRC_DIR)/Channel.cpp \
+		$(SRC_DIR)/utils.cpp
 
 OBJ		:= $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 

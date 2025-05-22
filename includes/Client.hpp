@@ -6,6 +6,7 @@
 # include <utility>
 
 # include <Server.hpp>
+# include <utils.hpp>
 
 class Server;
 class Channel;
@@ -18,6 +19,7 @@ private:
 		PASS,
 		NICK,
 		USER,
+		JOIN,
 		PRIVMSG,
 		KICK,
 		INVITE,
@@ -37,8 +39,9 @@ private:
 
 	std::string	stock;
 
-	cmds	registering(const std::string &);
-	cmds	parse_cmd(const std::string &);
+	static cmds		parse_register(const std::string &);
+	static cmds		parse_cmd(const std::string &);
+	int		exec_cmd(const std::string &);
 	int		join(const std::string &chan_name);
 	// int		join(std::string &chan_name, std::string &password);
 	int		msg_chan(const std::string &chan, const std::string &msg);
