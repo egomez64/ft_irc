@@ -97,7 +97,7 @@ int Server::acceptNew()
 	clients.insert(std::pair<const int, Client>(client_fd, Client(client_fd, *this)));
 	std::cout << "Client " << client_fd << " accepted.\n";
 
-	// make_socket_non_blocking(client_fd);
+	make_socket_non_blocking(client_fd);
 
 	epoll_event		client_event;
 	std::memset(&client_event, 0, sizeof (client_event));

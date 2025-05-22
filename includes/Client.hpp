@@ -45,7 +45,7 @@ private:
 
 public:
 	Client(int fd, Server &serv) : fd(fd), serv(serv), auth(false) { (void)auth; };
-	~Client() { close(fd); }
+	~Client() { /*close(fd);*/ }
 
 	int		receive();
 	int		send(const std::string &) const;

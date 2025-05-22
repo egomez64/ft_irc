@@ -2,7 +2,9 @@
 
 Client::cmds Client::registering(const std::string &str)
 {
-	std::string		first_word(str, str.find_first_of(' '));
+	std::string		first_word;
+
+	first_word.assign(str, 0, str.find_first_of(' '));
 
 	if (first_word == "CAP")
 		return CAP;
@@ -63,7 +65,7 @@ int Client::receive()
 	static const int	buff_size = 1024;
 	char				buff[buff_size];
 
-	ssize_t	bytes_read = recv(fd, buff, buff_size, 0);
+	ssize_t	bytes_read = recv(fd, buff, buff_size - 1, 0);
 	if (bytes_read == -1) {
 		std::perror("recv");
 		return -1;
