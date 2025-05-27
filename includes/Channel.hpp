@@ -46,6 +46,7 @@ public:
 	// class methods
 	int		add_client(Client &);
 	// int		add_client(Client &, std::string &password);
+    int     msg(const std::string &msg);
     int     msg(const Client &, const std::string &msg);
 
 	int     kick(const Client& _operator, Client& target);
@@ -64,5 +65,7 @@ public:
 	void	setTopic(const std::string &_topic)			{ topic = _topic; }
 	void	setPassword(const std::string &_password)	{ password = _password; }
 };
+
+inline bool operator<(const Channel& x, const Channel& y) {return (x.getName() < y.getName());}
 
 #endif // CHANNEL_HPP

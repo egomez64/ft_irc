@@ -30,7 +30,7 @@ class Server
 {
 private:
 	std::string	password;
-	int			socket_fd;
+	int			server_fd;
 	int			epoll_fd;
 
 	std::map<const int, Client>				clients;

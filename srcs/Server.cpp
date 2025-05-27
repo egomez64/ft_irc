@@ -16,14 +16,14 @@ int Server::make_socket_non_blocking(int fd)
 
 int Server::setSocket(in_port_t port)
 {
-	if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		std::perror("socket");
 		// std::strerror(errno);
 		return -1;
 	}
 
 	int		yes = 1;
-	setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof (yes));
+	setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof (yes));
 
 	sockaddr_in		server_addr;
 	std::memset(&server_addr, 0, sizeof (server_addr));
@@ -31,24 +31,24 @@ int Server::setSocket(in_port_t port)
 	server_addr.sin_addr.s_addr = INADDR_ANY;
 	server_addr.sin_port = htons(port);
 
-	if (bind(socket_fd, (sockaddr *)&server_addr, sizeof (server_addr)) == -1) {
+	if (bind(server_fd, (sockaddr *)&server_addr, sizeof (server_addr)) == -1) {
 		std::perror("bind");
 		return -1;
 	}
 
-	if (listen(socket_fd, max_events) == -1) {
+	if (listen(server_fd, max_events) == -1) {
 		std::perror("listen");
 		return -1;
 	}
 
 	std::cout << "Server listening on port " << port << '\n';
 
-	if (make_socket_non_blocking(socket_fd) == -1) {
+	if (make_socket_non_blocking(server_fd) == -1) {
 		std::perror("listen");
 		return -1;
 	}
 
-	return socket_fd;
+	return server_fd;
 }
 
 int Server::setEpoll()
@@ -62,9 +62,9 @@ int Server::setEpoll()
 		epoll_event	event;
 		std::memset(&event, 0, sizeof (event));
 		event.events = EPOLLIN;
-		event.data.fd = socket_fd;
+		event.data.fd = server_fd;
 
-		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &event) == -1) {
+		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event) == -1) {
 			std::perror("epoll_ctl");
 			return -1;
 		}
@@ -88,7 +88,7 @@ int Server::acceptNew()
 	sockaddr_in		client_addr;
 	socklen_t		client_len = sizeof (client_addr);
 	int				client_fd;
-	if ((client_fd = accept(socket_fd, (sockaddr*)&client_addr, &client_len)) == -1) {
+	if ((client_fd = accept(server_fd, (sockaddr*)&client_addr, &client_len)) == -1) {
 		std::perror("accept");
 		return -1;
 	}
@@ -124,7 +124,7 @@ Server::Server(in_port_t port, const std::string &password)
 
 Server::~Server()
 {
-	close(socket_fd);
+	close(server_fd);
 	close(epoll_fd);
 }
 
@@ -153,7 +153,7 @@ int Server::listenLoop()
 					return 0;
 				}				
 			}
-			else if (events[i].data.fd == socket_fd)
+			else if (events[i].data.fd == server_fd)
 				acceptNew();
 			else if ((client = clients.find(events[i].data.fd)) != clients.end())
 				receive(client->second);
@@ -183,6 +183,7 @@ bool Server::test_password(const std::string &str)
 Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name)
 {
 	std::map<const std::string &, Channel>::iterator	it;
+
 	if ((it = channels.find(chan_name)) != channels.end()) {
 		if (it->second.add_client(client) == -1)
 			return NULL;
@@ -192,7 +193,10 @@ Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name
 		Channel		new_chan(chan_name, *this);
 		Channel		&inserted_chan = channels.insert(std::pair<const std::string &, Channel>(new_chan.getName(), new_chan)).first->second;
 
-		inserted_chan.add_client(client);
+		if (inserted_chan.add_client(client) == -1)
+			return NULL;
+		PRINT(chan_name << " succesfully created");
+		inserted_chan.msg(chan_name + " succefully created\n");
 		return &inserted_chan;
 	}
 }

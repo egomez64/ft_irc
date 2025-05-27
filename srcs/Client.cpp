@@ -94,6 +94,12 @@ int Client::exec_cmd(const std::string &cmd)
 	case INVALID:
 		return -1;
 
+	case JOIN:
+		if (split_cmd.size() < 2)
+			return -1;
+		join(split_cmd[1]);
+		break;
+
 	default:
 		break;
 	}
@@ -109,6 +115,8 @@ int Client::join(const std::string &chan_name)
 		return -1;
 	}
 	channels.insert(std::pair<const std::string &, Channel &>(chan->getName(), *chan));
+	std::string msg("Welcome to the channel " + chan_name + "\n");
+	send(msg);
 	return 0;
 }
 
@@ -139,7 +147,8 @@ int Client::receive()
 	stock.append(buff, bytes_read);
 
 	std::size_t		end_msg;
-	while ((end_msg = stock.find("\r\n")) != std::string::npos) {
+	// while ((end_msg = stock.find("\r\n")) != std::string::npos) {
+	while ((end_msg = stock.find("\n")) != std::string::npos) {
 		std::string		cmd(stock, 0, end_msg);
 		std::cout << cmd << '\n';
 		exec_cmd(cmd);
