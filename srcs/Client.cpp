@@ -80,6 +80,10 @@ int Client::exec_cmd(const std::string &cmd)
 	case NICK:
 		if (split_cmd.size() != 2)
 			return -1;
+		if (!serv.nick_test(split_cmd[1])) {
+			send(ERR_NICKNAMEINUSE(split_cmd[1]));
+			return -1;
+		}
 		nickname = split_cmd[1];
 		check_auth();
 		break;
@@ -114,7 +118,7 @@ int Client::join(const std::string &chan_name)
 		std::cout << "Couldn't add_client\n";
 		return -1;
 	}
-	channels.insert(std::pair<const std::string &, Channel &>(chan->getName(), *chan));
+	channels.insert(std::pair<const std::string, Channel &>(chan_name, *chan));
 	std::string msg("Welcome to the channel " + chan_name + "\n");
 	send(msg);
 	return 0;
@@ -122,7 +126,7 @@ int Client::join(const std::string &chan_name)
 
 int Client::msg_chan(const std::string &chan, const std::string &msg)
 {
-	std::map<const std::string &, Channel &>::iterator	it;
+	std::map<const std::string, Channel &>::iterator	it;
 
 	if ((it = channels.find(chan)) == channels.end()) {
 		std::cerr << "You're not in this channel.\n";
@@ -143,16 +147,21 @@ int Client::receive()
 		std::perror("recv");
 		return -1;
 	}
+	else if (bytes_read == 0) {
+		close(fd);
+		return -1;
+	}
 	buff[bytes_read] = '\0';
 	stock.append(buff, bytes_read);
 
 	std::size_t		end_msg;
-	// while ((end_msg = stock.find("\r\n")) != std::string::npos) {
-	while ((end_msg = stock.find("\n")) != std::string::npos) {
+	while ((end_msg = stock.find("\r\n")) != std::string::npos) {
+	// while ((end_msg = stock.find("\n")) != std::string::npos) {
 		std::string		cmd(stock, 0, end_msg);
 		std::cout << cmd << '\n';
 		exec_cmd(cmd);
 		stock.erase(0, end_msg + 2);
+		// stock.erase(0, end_msg + 1);
 	}
 	return 0;
 }

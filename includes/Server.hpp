@@ -34,7 +34,7 @@ private:
 	int			epoll_fd;
 
 	std::map<const int, Client>				clients;
-	std::map<const std::string&, Channel>	channels;
+	std::map<const std::string, Channel>	channels;
 
 	static const int	max_events;
 
@@ -57,6 +57,7 @@ public:
 
 	bool		test_password(const std::string &);
 	Channel		*add_client_to_chan(Client &, const std::string &channel);
+	bool		nick_test(const std::string &nickname);
 };
 
 #endif // SERVER_HPP

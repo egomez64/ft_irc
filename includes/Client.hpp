@@ -7,6 +7,7 @@
 
 # include <Server.hpp>
 # include <utils.hpp>
+# include <numerics.hpp>
 
 class Server;
 class Channel;
@@ -36,7 +37,7 @@ private:
 	bool		pass;
 	bool		auth;
 
-	std::map<const std::string &, Channel &>	channels;
+	std::map<const std::string, Channel &>	channels;
 
 	std::string	stock;
 

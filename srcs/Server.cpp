@@ -182,21 +182,36 @@ bool Server::test_password(const std::string &str)
 
 Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name)
 {
-	std::map<const std::string &, Channel>::iterator	it;
+	Channel		*chan;
+	std::map<const std::string, Channel>::iterator	it;
 
 	if ((it = channels.find(chan_name)) != channels.end()) {
-		if (it->second.add_client(client) == -1)
+		chan = &it->second;
+		if (chan->add_client(client) == -1)
 			return NULL;
-		return &it->second;
+		return chan;
 	}
 	else {
-		Channel		new_chan(chan_name, *this);
-		Channel		&inserted_chan = channels.insert(std::pair<const std::string &, Channel>(new_chan.getName(), new_chan)).first->second;
+		std::pair<std::map<const std::string, Channel>::iterator, bool>
+			inserted = channels.insert(std::pair<const std::string, Channel>(chan_name, Channel(chan_name, *this)));
+		if (!inserted.second)
+			return NULL;
+		it = inserted.first;
+		chan = &it->second;
 
-		if (inserted_chan.add_client(client) == -1)
+		if (chan->add_client(client) == -1)
 			return NULL;
 		PRINT(chan_name << " succesfully created");
-		inserted_chan.msg(chan_name + " succefully created\n");
-		return &inserted_chan;
+		chan->msg(chan_name + " succefully created\n");
+		return chan;
 	}
+}
+
+bool Server::nick_test(const std::string &nickname)
+{
+	for (std::map<const int, Client>::const_iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->second.get_nickname() == nickname)
+			return false;
+	}
+	return true;
 }
