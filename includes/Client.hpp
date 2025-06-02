@@ -47,7 +47,7 @@ private:
 	int		exec_cmd(const std::string &);
 	int		join(const std::string &chan_name);
 	// int		join(std::string &chan_name, std::string &password);
-	int		msg_chan(const std::string &chan, const std::string &msg);
+	int		privmsg(const std::string &target, const std::string &msg);
 
 public:
 	Client(int fd, Server &serv) : fd(fd), serv(serv), pass(false), auth(false) { (void)auth; };

@@ -70,6 +70,8 @@ int Client::exec_cmd(const std::string &cmd)
 
 	switch (auth ? parse_cmd(split_cmd[0]) : parse_register(split_cmd[0]))
 	{
+		std::size_t	pos;
+
 	case PASS:
 		if (split_cmd.size() != 2)
 			return -1;
@@ -104,6 +106,13 @@ int Client::exec_cmd(const std::string &cmd)
 		join(split_cmd[1]);
 		break;
 
+	case PRIVMSG:
+		if (split_cmd.size() < 3)
+			return -1;
+		pos = cmd.find_first_of(':') + 1;
+		privmsg(split_cmd[1], ":" + nickname + " PRIVMSG " + split_cmd[1] + " :" + cmd.substr(pos, cmd.length() - pos));
+		break;
+
 	default:
 		break;
 	}
@@ -119,20 +128,20 @@ int Client::join(const std::string &chan_name)
 		return -1;
 	}
 	channels.insert(std::pair<const std::string, Channel &>(chan_name, *chan));
-	std::string msg("Welcome to the channel " + chan_name + "\n");
-	send(msg);
+	// std::string msg("Welcome to the channel " + chan_name + "\r\n");
+	// send(msg);
 	return 0;
 }
 
-int Client::msg_chan(const std::string &chan, const std::string &msg)
+int Client::privmsg(const std::string &target, const std::string &msg)
 {
 	std::map<const std::string, Channel &>::iterator	it;
 
-	if ((it = channels.find(chan)) == channels.end()) {
+	if ((it = channels.find(target)) == channels.end()) {
 		std::cerr << "You're not in this channel.\n";
 		return -1;
 	}
-	it->second.msg(*this, msg);
+	it->second.msg(*this, msg + "\r\n");
 	return 0;
 }
 

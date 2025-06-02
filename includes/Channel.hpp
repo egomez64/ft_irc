@@ -38,6 +38,8 @@ private:
 
 	modes_t		modes;
 
+	std::string		users() const;
+
 public:
 
 	// constructor

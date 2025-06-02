@@ -1,3 +1,5 @@
 Gérer les "\r\n"
-Gestion des messages
-Gerer les numerics des channels
+Gestion des messages (entre utilisateurs)
+
+refresh de channels usr_lst
+MODE et WHO

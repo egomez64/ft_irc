@@ -1,7 +1,7 @@
-#define CLIENT(nick, user)							(std::string(nick) + "!" + std::string(user) + "@localhost")
+#define CLIENT(nick, user)							(nick + "!" + user + "@localhost")
 #define PRIVMSG(client, target, message)			(":" + client + " PRIVMSG " + target + " :" + message + "\r\n")
 
-#define RPL_JOIN(client, channel)					(":" + std::string(client) + " JOIN " + std::string(channel) + std::string("\r\n"))
+#define RPL_JOIN(client, channel)					(":" + client + " JOIN " + channel + "\r\n")
 #define RPL_ENDOFNAMES(client, channel)				(": 366 " + client + " " + channel + " :End of /NAMES list.\r\n")
 #define RPL_PART(client, channel)					(":" + client + " PART " + channel + "\r\n")
 #define RPL_PARTMESSAGE(client, channel, message)	(":" + client + " PART " + channel + " :" + message +"\r\n")
