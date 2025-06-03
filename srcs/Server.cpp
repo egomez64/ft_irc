@@ -215,3 +215,12 @@ bool Server::nick_test(const std::string &nickname)
 	}
 	return true;
 }
+
+const Client *Server::findClient(const std::string &nickname) const
+{
+	for (std::map<const int, Client>::const_iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->second.get_nickname() == nickname)
+			return &it->second;
+	}
+	return NULL;
+}

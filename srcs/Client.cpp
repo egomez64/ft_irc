@@ -107,10 +107,24 @@ int Client::exec_cmd(const std::string &cmd)
 		break;
 
 	case PRIVMSG:
-		if (split_cmd.size() < 3)
+		if (split_cmd.size() < 3) {
+			if (split_cmd.size() == 1)
+				send(ERR_NORECIPIENT(nickname, cmd));
+			else
+				send(ERR_NOTEXTTOSEND(nickname));
 			return -1;
+		}
 		pos = cmd.find_first_of(':') + 1;
-		privmsg(split_cmd[1], ":" + nickname + " PRIVMSG " + split_cmd[1] + " :" + cmd.substr(pos, cmd.length() - pos));
+		// privmsg(split_cmd[1], ":" + nickname + " PRIVMSG " + split_cmd[1] + " :" + cmd.substr(pos, cmd.length() - pos));
+		privmsg(split_cmd[1], PRIVMSG(nickname, split_cmd[1], cmd.substr(pos, cmd.length() - pos)));
+		break;
+	
+	case KICK:
+		if (split_cmd.size() < 3) {
+			send(ERR_NEEDMOREPARAMS(nickname, cmd));
+			return -1;
+		}
+		kick(split_cmd[1], split_cmd[2]);
 		break;
 
 	default:
@@ -123,6 +137,10 @@ int Client::join(const std::string &chan_name)
 {
 	Channel		*chan;
 
+	if (chan_name[0] != '#') {
+		send(ERR_BADCHANMASK(chan_name));
+		return -1;
+	}
 	if ((chan = serv.add_client_to_chan(*this, chan_name)) == NULL) {
 		std::cout << "Couldn't add_client\n";
 		return -1;
@@ -135,13 +153,34 @@ int Client::join(const std::string &chan_name)
 
 int Client::privmsg(const std::string &target, const std::string &msg)
 {
-	std::map<const std::string, Channel &>::iterator	it;
+	if (target[0] == '#') {
+		std::map<const std::string, Channel &>::iterator	it;
+	
+		if ((it = channels.find(target)) == channels.end()) {
+			send(ERR_CANNOTSENDTOCHAN(nickname, target));
+			return -1;
+		}
+		it->second.msg(*this, msg);
+	}
+	else {
+		const Client	*client;
+		if ((client = serv.findClient(target)) == NULL) {
+			send(ERR_NOSUCHNICK(nickname, target));
+			return -1;
+		}
+		client->send(msg);
+	}
+	return 0;
+}
 
-	if ((it = channels.find(target)) == channels.end()) {
-		std::cerr << "You're not in this channel.\n";
+int Client::kick(const std::string &chan, const std::string &user, const std::string &reason)
+{
+	std::map<const std::string, Channel &>::iterator it = channels.find(chan);
+	if ( it == channels.end()){
+		send(ERR_NOTONCHANNEL(nickname, chan));
 		return -1;
 	}
-	it->second.msg(*this, msg + "\r\n");
+	it->second.kick(*this, user, reason);
 	return 0;
 }
 
@@ -183,5 +222,12 @@ int Client::send(const std::string &str) const
 		std::perror("send");
 		return -1;
 	}
+	return 0;
+}
+
+int Client::remove_chan(const std::string &chan)
+{
+	if (channels.erase(chan) == 0)
+		return -1;
 	return 0;
 }

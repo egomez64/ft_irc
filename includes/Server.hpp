@@ -55,9 +55,10 @@ public:
 
 	int		listenLoop();
 
-	bool		test_password(const std::string &);
-	Channel		*add_client_to_chan(Client &, const std::string &channel);
-	bool		nick_test(const std::string &nickname);
+	bool			test_password(const std::string &);
+	Channel			*add_client_to_chan(Client &, const std::string &channel);
+	bool			nick_test(const std::string &nickname);
+	const Client	*findClient(const std::string &nickname) const;
 };
 
 #endif // SERVER_HPP

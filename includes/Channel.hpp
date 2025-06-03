@@ -4,6 +4,7 @@
 # include <iostream>
 # include <map>
 # include <vector>
+# include <algorithm>
 
 # include <Client.hpp>
 
@@ -33,8 +34,8 @@ private:
 
 	Server	&serv;
 
-	std::map<const int, Client &>	clients;
-	std::vector<int>				operators;
+	std::map<const std::string, Client &>	clients;
+	std::vector<std::string>				operators;
 
 	modes_t		modes;
 
@@ -51,7 +52,7 @@ public:
     int     msg(const std::string &msg);
     int     msg(const Client &, const std::string &msg);
 
-	int     kick(const Client& _operator, Client& target);
+	int     kick(const Client& _operator, const std::string &target, const std::string &reason);
 	int     invite(const Client& _operator, Client& target);
 	int     change_topic(const Client & _operator, std::string &);
 	int     change_modes(const Client & _operator, modes_t &);

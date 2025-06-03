@@ -1,5 +1,7 @@
-Gérer les "\r\n"
-Gestion des messages (entre utilisateurs)
+MODE
 
-refresh de channels usr_lst
-MODE et WHO
+sstream
+multicommands
+Understand leaving clients
+
+Commit regularly

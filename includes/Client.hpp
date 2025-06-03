@@ -48,6 +48,7 @@ private:
 	int		join(const std::string &chan_name);
 	// int		join(std::string &chan_name, std::string &password);
 	int		privmsg(const std::string &target, const std::string &msg);
+	int		kick(const std::string &chan, const std::string &user, const std::string &reason = "");
 
 public:
 	Client(int fd, Server &serv) : fd(fd), serv(serv), pass(false), auth(false) { (void)auth; };
@@ -62,6 +63,8 @@ public:
 
 	void	set_nickname(const std::string &str)	{ nickname = str; }
 	void	set_username(const std::string &str)	{ username = str; }
+
+	int	remove_chan(const std::string &chan);
 };
 
 #endif // CLIENT_HPP
