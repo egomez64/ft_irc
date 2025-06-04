@@ -46,9 +46,12 @@ private:
 	void	check_auth();
 	int		exec_cmd(const std::string &);
 	int		join(const std::string &chan_name);
-	// int		join(std::string &chan_name, std::string &password);
+	// int		join(std::string &chan_name, std::string &key);
 	int		privmsg(const std::string &target, const std::string &msg);
 	int		kick(const std::string &chan, const std::string &user, const std::string &reason = "");
+	// int		invite();
+	// int		topic();
+	int		mode(const std::string &target, const std::string &modestring);
 
 public:
 	Client(int fd, Server &serv) : fd(fd), serv(serv), pass(false), auth(false) { (void)auth; };

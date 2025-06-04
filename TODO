@@ -1,7 +1,13 @@
-MODE
+MODE rpl
+NAMES: operators with '@' prefix
+JOIN:	check chan mode
+		creator becomes operator
 
-sstream
-multicommands
+Channel func remove client (map and set)
+
+multicommands ','
+multicommands mode
+
 Understand leaving clients
 
 Commit regularly

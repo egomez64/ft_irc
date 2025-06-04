@@ -16,31 +16,18 @@ Client::cmds Client::parse_register(const std::string &str)
 
 Client::cmds Client::parse_cmd(const std::string &str)
 {
-	if (str == "JOIN")
-		return JOIN;
-	else if (str == "PRIVMSG")
-		return PRIVMSG;
-	else if (str == "KICK")
-		return KICK;
-	else if (str == "INVITE")
-		return INVITE;
-	else if (str == "TOPIC")
-		return TOPIC;
-	else if (str == "MODE")
-		return MODE;
-	else
-		return INVALID;
+	if (str == "JOIN")			return JOIN;
+	else if (str == "PRIVMSG")	return PRIVMSG;
+	else if (str == "KICK")		return KICK;
+	else if (str == "INVITE")	return INVITE;
+	else if (str == "TOPIC")	return TOPIC;
+	else if (str == "MODE")		return MODE;
+	else						return INVALID;
 }
 
 void Client::check_auth()
 {
-	PRINT("check auth");
-	PRINT("auth: " << auth);
-	PRINT("pass: " << pass);
-	PRINT("nick: " << nickname);
-	PRINT("user: " << username);
 	auth = pass && !nickname.empty() && !username.empty();
-	PRINT("auth: " << auth);
 	if (!auth)
 		return;
 
@@ -127,6 +114,14 @@ int Client::exec_cmd(const std::string &cmd)
 		kick(split_cmd[1], split_cmd[2]);
 		break;
 
+	case MODE:
+		if (split_cmd.size() < 2) {
+			return -1;
+		}
+		pos = cmd.find_first_of(' ', cmd.find_first_of(' ') + 1) + 1;
+		mode(split_cmd[1], cmd.substr(pos, cmd.length() - pos));
+		break;
+
 	default:
 		break;
 	}
@@ -182,6 +177,22 @@ int Client::kick(const std::string &chan, const std::string &user, const std::st
 	}
 	it->second.kick(*this, user, reason);
 	return 0;
+}
+
+int Client::mode(const std::string &target, const std::string &modestring)
+{
+	if (target[0] != '#') {
+		send(ERR_UMODEUNKNOWNFLAG(nickname));
+		return -1;
+	}
+
+	std::map<const std::string, Channel &>::iterator	it;
+
+	if ((it = channels.find(target)) == channels.end()) {
+		send (ERR_NOSUCHCHANNEL(nickname, target));
+		return -1;
+	}
+	return it->second.change_modes(*this, modestring);
 }
 
 int Client::receive()
