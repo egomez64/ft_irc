@@ -193,17 +193,11 @@ Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name
 	}
 	else {
 		std::pair<std::map<const std::string, Channel>::iterator, bool>
-			inserted = channels.insert(std::pair<const std::string, Channel>(chan_name, Channel(chan_name, *this)));
+			inserted = channels.insert(std::pair<const std::string, Channel>(chan_name, Channel(chan_name, client, *this)));
+
 		if (!inserted.second)
 			return NULL;
-		it = inserted.first;
-		chan = &it->second;
-
-		if (chan->add_client(client) == -1)
-			return NULL;
-		PRINT(chan_name << " succesfully created");
-		chan->msg(chan_name + " succefully created\n");
-		return chan;
+		return &inserted.first->second;
 	}
 }
 

@@ -1,7 +1,5 @@
 MODE rpl
-NAMES: operators with '@' prefix
 JOIN:	check chan mode
-		creator becomes operator
 
 Channel func remove client (map and set)
 
@@ -11,3 +9,9 @@ multicommands mode
 Understand leaving clients
 
 Commit regularly
+
+Welcome: 1 2 3 4 5
+005: MODES:1 TARGEMAX=JOIN:1,PRIVMSG:1,KICK:1		????
+PING PONG
+
+signaux

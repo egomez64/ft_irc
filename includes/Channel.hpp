@@ -5,6 +5,7 @@
 # include <map>
 # include <set>
 # include <algorithm>
+# include <ctime>
 
 # include <Client.hpp>
 
@@ -49,14 +50,15 @@ private:
 
 	modes_t		modes;
 
-	std::string		users() const;
+	std::string		users_str() const;
+	std::string		modes_str() const;
 	// static modes_e	parse_mode(char modechar);
 	void			remove_client(const std::string &nickname);
 
 public:
 
 	// constructor
-	Channel(const std::string &_name, Server &serv): name(_name), serv(serv) {}
+	Channel(const std::string &name, Client &, Server &serv);
 
 	// class methods
 	int		add_client(Client &);
