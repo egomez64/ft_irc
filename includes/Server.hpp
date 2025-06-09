@@ -53,7 +53,7 @@ public:
 	int		listenLoop();
 
 	bool			test_password(const std::string &);
-	Channel			*add_client_to_chan(Client &, const std::string &channel);
+	Channel			*add_client_to_chan(Client &, const std::string &channel, const std::string &key);
 	bool			nick_test(const std::string &nickname);
 	const Client	*findClient(const std::string &nickname) const;
 };

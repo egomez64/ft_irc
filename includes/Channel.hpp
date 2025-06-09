@@ -16,12 +16,12 @@ class Channel {
 public:
 
 	struct modes_t {
-		bool	invite;
-		bool	topic;
-		bool	key;
-		int		limit;
+		bool		invite;
+		bool		topic;
+		std::string	key;
+		std::size_t	limit;
 
-		modes_t() : invite(false), topic(false), key(false), limit(-1) {};
+		modes_t() : invite(false), topic(false), limit(0) {};
 	};
 
 	enum operator_mode {
@@ -41,7 +41,6 @@ private:
 
 	std::string		name;
 	std::string		topic;
-	std::string		key;
 
 	Server	&serv;
 
@@ -56,12 +55,11 @@ private:
 	void			remove_client(const std::string &nickname);
 
 public:
-
 	// constructor
 	Channel(const std::string &name, Client &, Server &serv);
 
 	// class methods
-	int		add_client(Client &);
+	int		add_client(Client &, const std::string &key);
 	// int		add_client(Client &, std::string &key);
     int     msg(const std::string &msg);
     int     msg(const Client &, const std::string &msg);
@@ -76,12 +74,12 @@ public:
 	// getters
 	const std::string	&getName() const		{ return name; }
 	const std::string	&getTopic() const		{ return topic; }
-	const std::string	&getPassword() const	{ return key; }
+	const std::string	&getPassword() const	{ return modes.key; }
 
 	// setters
 	void	setName(const std::string &_name)			{ name = _name; }
 	void	setTopic(const std::string &_topic)			{ topic = _topic; }
-	void	setPassword(const std::string &_password)	{ key = _password; }
+	void	setPassword(const std::string &_password)	{ modes.key = _password; }
 };
 
 inline bool operator<(const Channel& x, const Channel& y) {return (x.getName() < y.getName());}

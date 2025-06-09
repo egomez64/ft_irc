@@ -1,5 +1,6 @@
-MODE rpl
+
 JOIN:	check chan mode
+SAVE KEY
 
 Channel func remove client (map and set)
 

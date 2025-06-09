@@ -92,7 +92,7 @@ int Server::acceptNew()
 		std::perror("accept");
 		return -1;
 	}
-	clients.insert(std::pair<const int, Client>(client_fd, Client(client_fd, *this)));
+	clients.insert(std::make_pair(client_fd, Client(client_fd, *this)));
 	std::cout << "Client " << client_fd << " accepted.\n";
 
 	make_socket_non_blocking(client_fd);
@@ -180,20 +180,20 @@ bool Server::test_password(const std::string &str)
 	return (str == password);
 }
 
-Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name)
+Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name, const std::string &key)
 {
 	Channel		*chan;
 	std::map<const std::string, Channel>::iterator	it;
 
 	if ((it = channels.find(chan_name)) != channels.end()) {
 		chan = &it->second;
-		if (chan->add_client(client) == -1)
+		if (chan->add_client(client, key) == -1)
 			return NULL;
 		return chan;
 	}
 	else {
 		std::pair<std::map<const std::string, Channel>::iterator, bool>
-			inserted = channels.insert(std::pair<const std::string, Channel>(chan_name, Channel(chan_name, client, *this)));
+			inserted = channels.insert(std::make_pair(chan_name, Channel(chan_name, client, *this)));
 
 		if (!inserted.second)
 			return NULL;

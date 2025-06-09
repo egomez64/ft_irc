@@ -128,7 +128,7 @@ int Client::exec_cmd(const std::string &cmd)
 	return 0;
 }
 
-int Client::join(const std::string &chan_name)
+int Client::join(const std::string &chan_name, const std::string key)
 {
 	Channel		*chan;
 
@@ -136,13 +136,11 @@ int Client::join(const std::string &chan_name)
 		send(ERR_BADCHANMASK(chan_name));
 		return -1;
 	}
-	if ((chan = serv.add_client_to_chan(*this, chan_name)) == NULL) {
+	if ((chan = serv.add_client_to_chan(*this, chan_name, key)) == NULL) {
 		std::cout << "Couldn't add_client\n";
 		return -1;
 	}
 	channels.insert(std::pair<const std::string, Channel &>(chan_name, *chan));
-	// std::string msg("Welcome to the channel " + chan_name + "\r\n");
-	// send(msg);
 	return 0;
 }
 

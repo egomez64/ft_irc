@@ -45,8 +45,7 @@ private:
 	static cmds		parse_cmd(const std::string &);
 	void	check_auth();
 	int		exec_cmd(const std::string &);
-	int		join(const std::string &chan_name);
-	// int		join(std::string &chan_name, std::string &key);
+	int		join(const std::string &chan_name, const std::string key = "");
 	int		privmsg(const std::string &target, const std::string &msg);
 	int		kick(const std::string &chan, const std::string &user, const std::string &reason = "");
 	// int		invite();

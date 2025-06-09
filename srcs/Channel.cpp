@@ -26,12 +26,12 @@ std::string Channel::modes_str() const
 
 	if (modes.invite)
 		modes_str.push_back(MODES_INVITE);
-	if (modes.key)
-		modes_str.push_back(MODES_KEY);
-	if (modes.limit)
-		modes_str.push_back(MODES_LIMIT);
 	if (modes.topic)
 		modes_str.push_back(MODES_TOPIC);
+	if (!modes.key.empty())
+		modes_str.push_back(MODES_KEY);
+	if (modes.limit != 0)
+		modes_str.push_back(MODES_LIMIT);
 	
 	return modes_str;
 }
@@ -46,15 +46,32 @@ Channel::Channel(const std::string &name, Client &client, Server &serv)
 	: name(name)
 	, serv(serv)
 {
+	std::string		key;
+
 	operators.insert(client.get_nickname());
-	add_client(client);
+	add_client(client, key);
 }
 
-int Channel::add_client(Client &client)
+int Channel::add_client(Client &client, const std::string &key)
 {
 	const std::string	nickname = client.get_nickname();
+
 	if (clients.find(nickname) != clients.end())
 		return -1;
+	// if (key != modes.key) {
+	// 	PRINT("key: " << key);
+	// 	PRINT("modes.key: " << modes.key);
+	// 	client.send(ERR_BADCHANNELKEY(nickname, name));
+	// 	return -1;
+	// }
+	if (modes.invite) {
+		client.send(ERR_INVITEONLYCHAN(nickname, name));
+		return -1;
+	}
+	if (modes.limit != 0 && clients.size() >= modes.limit) {
+		client.send(ERR_CHANNELISFULL(nickname, name));
+		return -1;
+	}
 	clients.insert(std::pair<const std::string, Client &>(nickname, client));
 	msg(RPL_JOIN(nickname, name));
 	client.send(RPL_NAMREPLY(nickname, name, users_str()));
@@ -64,9 +81,8 @@ int Channel::add_client(Client &client)
 
 int Channel::msg(const std::string &msg)
 {
-	for (std::map<const std::string, Client &>::iterator it = clients.begin(); it != clients.end(); it++) {
+	for (std::map<const std::string, Client &>::iterator it = clients.begin(); it != clients.end(); it++)
 		it->second.send(msg);
-	}
 	return 0;
 }
 
@@ -138,7 +154,7 @@ int Channel::change_modes(Client &client, const std::string &modestring)
 		modes.invite = (plusminus == '+');
 		mode_change.push_back(plusminus);
 		mode_change.push_back(split_mode_str[0][1]);
-		msg(RPL_MODE(name, mode_change));
+		msg(RPL_MODE(client.get_nickname(), name, mode_change));
 		break;
 
 	case MODES_TOPIC:
@@ -148,11 +164,11 @@ int Channel::change_modes(Client &client, const std::string &modestring)
 		modes.topic = (plusminus == '+');
 		mode_change.push_back(plusminus);
 		mode_change.push_back(split_mode_str[0][1]);
-		msg(RPL_MODE(name, mode_change));
+		msg(RPL_MODE(client.get_nickname(), name, mode_change));
 		break;
 
 	case MODES_KEY:
-		if ((plusminus == '+') == modes.key)
+		if ((plusminus == '+') == !modes.key.empty())
 			break;
 		if (split_mode_str.size() < 2) {
 			client.send(ERR_INVALIDMODEPARAM(client.get_nickname(), name, split_mode_str[0][1], '*',
@@ -160,19 +176,19 @@ int Channel::change_modes(Client &client, const std::string &modestring)
 			return -1;
 		}
 		if (plusminus == '-' ) {
-			if (split_mode_str[1] != key) {
+			if (split_mode_str[1] != modes.key) {
 				client.send(ERR_KEYSET(name));
 				return -1;
 			}
-			key.clear();
+			modes.key.clear();
 		}
 		else
-			key = split_mode_str[1];
+			modes.key = split_mode_str[1];
 
 		modes.key = (plusminus == '+');
 		mode_change.push_back(plusminus);
 		mode_change.push_back(split_mode_str[0][1]);
-		msg(RPL_MODEARG(name, mode_change, split_mode_str[1]));
+		msg(RPL_MODEARG(client.get_nickname(), name, mode_change, split_mode_str[1]));
 		break;
 
 	case MODES_OPERATOR:
@@ -189,13 +205,13 @@ int Channel::change_modes(Client &client, const std::string &modestring)
 			if (operators.find(split_mode_str[1]) != operators.end())
 				break;
 			operators.insert(split_mode_str[1]);
-			msg(RPL_MODEARG(name, "+o", split_mode_str[1]));
+			msg(RPL_MODEARG(client.get_nickname(), name, "+o", split_mode_str[1]));
 		}
 		else {
 			if (operators.find(split_mode_str[1]) == operators.end())
 				break;
 			operators.erase(split_mode_str[1]);
-			msg(RPL_MODEARG(name, "-o", split_mode_str[1]));
+			msg(RPL_MODEARG(client.get_nickname(), name, "-o", split_mode_str[1]));
 		}
 		break;
 
@@ -204,7 +220,7 @@ int Channel::change_modes(Client &client, const std::string &modestring)
 			modes.limit = -1;
 			mode_change.push_back(plusminus);
 			mode_change.push_back(split_mode_str[0][1]);
-			msg(RPL_MODE(name, mode_change));
+			msg(RPL_MODE(client.get_nickname(), name, mode_change));
 			break;
 		}
 		if (split_mode_str.size() < 2) {
@@ -213,16 +229,19 @@ int Channel::change_modes(Client &client, const std::string &modestring)
 			return -1;
 		}
 		limit = std::strtol(split_mode_str[1].c_str(), &endptr, 10);
-		if (*endptr != '\0') {
+		if (limit <= 0) {
+			limit = 0;
 			client.send(ERR_INVALIDMODEPARAM(client.get_nickname(), name, split_mode_str[0][1], split_mode_str[1],
 				"Invalid limit mode parameter. Syntax: <limit>."));
 			return -1;
 		}
+		if ((limit == static_cast<long>(modes.limit)) && *endptr != '\0')
+			break;
 
 		modes.limit = limit;
 		mode_change.push_back(plusminus);
 		mode_change.push_back(split_mode_str[0][1]);
-		msg(RPL_MODEARG(name, mode_change, split_mode_str[1]));
+		msg(RPL_MODEARG(client.get_nickname(), name, mode_change, std::string(split_mode_str[1].c_str(), endptr - split_mode_str[1].c_str())));
 		break;
 
 	case MODES_UNKNOWN:
