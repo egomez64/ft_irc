@@ -114,10 +114,23 @@ int Client::exec_cmd(const std::string &cmd)
 		kick(split_cmd[1], split_cmd[2]);
 		break;
 
-	case MODE:
-		if (split_cmd.size() < 2) {
+	case TOPIC:
+		if (split_cmd.size() < 2){
+			send(ERR_NEEDMOREPARAMS(nickname, cmd));
 			return -1;
 		}
+		pos = cmd.find_first_of(':');
+		if (pos == std::string::npos) {
+			see_topic(split_cmd[1]);
+			break;
+		}
+		++pos;
+		topic(split_cmd[1], cmd.substr(pos, cmd.length() - pos));
+		break;
+	
+	case MODE:
+		if (split_cmd.size() < 2)
+			return -1;
 		pos = cmd.find_first_of(' ', cmd.find_first_of(' ') + 1) + 1;
 		mode(split_cmd[1], cmd.substr(pos, cmd.length() - pos));
 		break;
@@ -130,30 +143,36 @@ int Client::exec_cmd(const std::string &cmd)
 
 int Client::join(const std::string &chan_name, const std::string key)
 {
-	Channel		*chan;
+	std::vector<std::string> chans_names = split_on_char(chan_name, ',');
+	std::vector<std::string> keys = split_on_char(key, ',');
 
-	if (chan_name[0] != '#') {
-		send(ERR_BADCHANMASK(chan_name));
-		return -1;
+	for(std::vector<std::string>::iterator it_chan = chans_names.begin(), it_key = keys.begin(); it_chan != chans_names.end(); ++it_chan, ++it_key)
+	{
+		Channel		*chan;
+
+		if ((*it_chan)[0] != '#') {
+			send(ERR_BADCHANMASK(*it_chan));
+			continue ;
+		}
+		if ((chan = serv.add_client_to_chan(*this, *it_chan, *it_key)) == NULL) {
+			std::cout << "Couldn't add_client\n";
+			continue ;
+		}
+		channels.insert(std::pair<const std::string, Channel &>(*it_chan, *chan));
 	}
-	if ((chan = serv.add_client_to_chan(*this, chan_name, key)) == NULL) {
-		std::cout << "Couldn't add_client\n";
-		return -1;
-	}
-	channels.insert(std::pair<const std::string, Channel &>(chan_name, *chan));
 	return 0;
 }
 
 int Client::privmsg(const std::string &target, const std::string &msg)
 {
 	if (target[0] == '#') {
-		std::map<const std::string, Channel &>::iterator	it;
+		std::map<const std::string, Channel &>::iterator	it_chan;
 	
-		if ((it = channels.find(target)) == channels.end()) {
+		if ((it_chan = channels.find(target)) == channels.end()) {
 			send(ERR_CANNOTSENDTOCHAN(nickname, target));
 			return -1;
 		}
-		it->second.msg(*this, msg);
+		it_chan->second.msg(*this, msg);
 	}
 	else {
 		const Client	*client;
@@ -168,29 +187,53 @@ int Client::privmsg(const std::string &target, const std::string &msg)
 
 int Client::kick(const std::string &chan, const std::string &user, const std::string &reason)
 {
-	std::map<const std::string, Channel &>::iterator it = channels.find(chan);
-	if ( it == channels.end()){
+	std::map<const std::string, Channel &>::iterator it_chan = channels.find(chan);
+	if ( it_chan == channels.end()){
 		send(ERR_NOTONCHANNEL(nickname, chan));
 		return -1;
 	}
-	it->second.kick(*this, user, reason);
+	it_chan->second.kick(*this, user, reason);
 	return 0;
 }
 
-int Client::mode(const std::string &target, const std::string &modestring)
+int Client::see_topic(const std::string &chan)
+{
+	std::map<const std::string, Channel &>::iterator	it;
+
+	if ((it = channels.find(chan)) == channels.end()) {
+		send(ERR_NOSUCHCHANNEL(nickname, chan));
+		return -1;
+	}
+	it->second.see_topic(*this);
+	return 0;
+}
+
+int Client::topic(const std::string &chan, const std::string &topic)
+{
+	std::map<const std::string, Channel &>::iterator	it;
+
+	if ((it = channels.find(chan)) == channels.end()) {
+		send(ERR_NOSUCHCHANNEL(nickname, chan));
+		return -1;
+	}
+	it->second.change_topic(*this, topic);
+	return 0;
+}
+
+int Client::mode(const std::string &target, const std::string &str)
 {
 	if (target[0] != '#') {
 		send(ERR_UMODEUNKNOWNFLAG(nickname));
 		return -1;
 	}
 
-	std::map<const std::string, Channel &>::iterator	it;
+	std::map<const std::string, Channel &>::iterator	it_chan;
 
-	if ((it = channels.find(target)) == channels.end()) {
+	if ((it_chan = channels.find(target)) == channels.end()) {
 		send (ERR_NOSUCHCHANNEL(nickname, target));
 		return -1;
 	}
-	return it->second.change_modes(*this, modestring);
+	return it_chan->second.change_modes(*this, str);
 }
 
 int Client::receive()

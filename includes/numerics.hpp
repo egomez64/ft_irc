@@ -19,6 +19,8 @@
 	creationtime)									(": 329 " + client + ' ' + channel + ' ' + creationtime + "\r\n")
 #define RPL_NOTOPIC(client, channel)				(": 331 " + client + ' ' + channel + " :No topic is set\r\n")
 #define RPL_SEETOPIC(client, channel, topic)		(": 332 " + client + ' ' + channel + " :" + topic + "\r\n")
+#define RPL_TOPICWHOTIME(client, channel, nick, \
+	setat)											(": 333 " + client + ' ' + channel + ' ' + nick + ' ' + setat + "\r\n")
 #define RPL_INVITESNDR(client, invitee, channel)	(": 341 " + client + ' ' + invitee + ' ' + channel + "\r\n")
 #define RPL_NAMREPLY(client, channel, nicknames)	(": 353 " + client + " = " + channel + " :" + nicknames + "\r\n")
 #define RPL_ENDOFNAMES(client, channel)				(": 366 " + client + ' ' + channel + " :End of /NAMES list.\r\n")

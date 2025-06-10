@@ -45,12 +45,13 @@ private:
 	static cmds		parse_cmd(const std::string &);
 	void	check_auth();
 	int		exec_cmd(const std::string &);
-	int		join(const std::string &chan_name, const std::string key = "");
+	int		join(const std::string &chan, const std::string key = "");
 	int		privmsg(const std::string &target, const std::string &msg);
 	int		kick(const std::string &chan, const std::string &user, const std::string &reason = "");
 	// int		invite();
-	// int		topic();
-	int		mode(const std::string &target, const std::string &modestring);
+	int		see_topic(const std::string &chan);
+	int		topic(const std::string &chan, const std::string &topic);
+	int		mode(const std::string &target, const std::string &);
 
 public:
 	Client(int fd, Server &serv) : fd(fd), serv(serv), pass(false), auth(false) { (void)auth; };
