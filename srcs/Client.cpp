@@ -36,19 +36,6 @@ void Client::check_auth()
 	send(msg);
 }
 
-// enum cmds {
-// 	CAP,
-// 	PASS,
-// 	NICK,
-// 	USER,
-// 	PRIVMSG,
-// 	KICK,
-// 	INVITE,
-// 	TOPIC,
-// 	MODE,
-// 	INVALID,
-// };
-
 int Client::exec_cmd(const std::string &cmd)
 {
 	std::vector<std::string>	split_cmd = split(cmd);
@@ -102,7 +89,6 @@ int Client::exec_cmd(const std::string &cmd)
 			return -1;
 		}
 		pos = cmd.find_first_of(':') + 1;
-		// privmsg(split_cmd[1], ":" + nickname + " PRIVMSG " + split_cmd[1] + " :" + cmd.substr(pos, cmd.length() - pos));
 		privmsg(split_cmd[1], PRIVMSG(nickname, split_cmd[1], cmd.substr(pos, cmd.length() - pos)));
 		break;
 	
@@ -131,6 +117,10 @@ int Client::exec_cmd(const std::string &cmd)
 	case MODE:
 		if (split_cmd.size() < 2)
 			return -1;
+		if (split_cmd.size() == 2) {
+			mode(split_cmd[1], "");
+			break;
+		}
 		pos = cmd.find_first_of(' ', cmd.find_first_of(' ') + 1) + 1;
 		mode(split_cmd[1], cmd.substr(pos, cmd.length() - pos));
 		break;
@@ -236,39 +226,52 @@ int Client::mode(const std::string &target, const std::string &str)
 	return it_chan->second.change_modes(*this, str);
 }
 
-int Client::receive()
+int Client::quit_server(const std::string &message)
 {
-	std::cout << "Client " << fd << ": receive\n";
+	std::set<Client &>	friends;
+
+	for (std::map<const std::string, Channel &>::iterator chan = channels.begin(); chan != channels.end(); ++chan) {
+		std::pair<std::map<const std::string, Client &>::const_iterator, std::map<const std::string, Client &>::const_iterator> range;
+		range = chan->second.getClients();
+		friends.insert(range.first, range.second);
+	}
+	friends.erase(*this);
+	for (std::set<Client &>::iterator it = friends.begin(); it != friends.end(); ++it) {
+		it->send(RPL_QUIT(nickname, message));
+	}
+	return 0;
+}
+
+Client::recv_e Client::receive()
+{
 	static const int	buff_size = 1024;
 	char				buff[buff_size];
 
 	ssize_t	bytes_read = recv(fd, buff, buff_size - 1, 0);
 	if (bytes_read == -1) {
 		std::perror("recv");
-		return -1;
+		return RECV_ERR;
 	}
 	else if (bytes_read == 0) {
-		close(fd);
-		return -1;
+		quit_server("Connection closed");
+		return RECV_OVER;
 	}
-	buff[bytes_read] = '\0';
+
+	buff[bytes_read] = '\0';			// TODO! remove
+	PRINT("<< " << buff);
 	stock.append(buff, bytes_read);
 
 	std::size_t		end_msg;
 	while ((end_msg = stock.find("\r\n")) != std::string::npos) {
-	// while ((end_msg = stock.find("\n")) != std::string::npos) {
 		std::string		cmd(stock, 0, end_msg);
-		std::cout << cmd << '\n';
 		exec_cmd(cmd);
 		stock.erase(0, end_msg + 2);
-		// stock.erase(0, end_msg + 1);
 	}
-	return 0;
+	return RECV_OK;
 }
 
 int Client::send(const std::string &str) const
 {
-	// std::string		msg = SSTR("# " << fd << ": received.\n");
 	ssize_t	sent = ::send(fd, str.c_str(), str.length(), MSG_NOSIGNAL);
 	if (sent == -1) {
 		std::perror("send");

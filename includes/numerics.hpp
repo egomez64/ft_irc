@@ -42,7 +42,7 @@
 #define ERR_NEEDMOREPARAMS(client, cmd)				(": 461 " + client + ' ' + cmd + " :Not enough parameters\r\n")
 #define ERR_ALREADYREGISTRED(client)				(": 462 " + client + " ::Unauthorized command (already registered)\r\n")
 #define ERR_PASSWDMISMATCH(client)					(": 464 " + client + " :Password incorrect\r\n")
-#define ERR_KEYSET(channel)							(": 467 " + channel + " :Channel key already set\r\n")
+#define ERR_KEYSET(client, channel)					(": 467 " + client + ' ' + channel + " :Channel key already set\r\n")
 #define ERR_CHANNELISFULL(client, channel)			(": 471 " + client + ' ' + channel + " :Cannot join channel (+l)\r\n")
 #define ERR_UNKNOWNMODE(client, mode)				(": 472 " + client + ' ' + mode + " :is not a recognised channel mode.\r\n")
 #define ERR_INVITEONLYCHAN(client, channel)			(": 473 " + client + ' ' + channel + " :Cannot join channel (+i)\r\n")

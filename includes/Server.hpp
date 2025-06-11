@@ -56,6 +56,7 @@ public:
 	Channel			*add_client_to_chan(Client &, const std::string &channel, const std::string &key);
 	bool			nick_test(const std::string &nickname);
 	const Client	*findClient(const std::string &nickname) const;
+	int				removeClient(const Client &);
 };
 
 #endif // SERVER_HPP

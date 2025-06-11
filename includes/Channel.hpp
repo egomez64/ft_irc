@@ -73,6 +73,8 @@ public:
 	// getters
 	const std::string	&getName() const		{ return name; }
 	const std::string	&getPassword() const	{ return modes.key; }
+	std::pair<std::map<const std::string, Client &>::const_iterator, std::map<const std::string, Client &>::const_iterator>
+						&getClients() const;
 
 	// setters
 	void	setName(const std::string &_name)			{ name = _name; }

@@ -52,12 +52,19 @@ private:
 	int		see_topic(const std::string &chan);
 	int		topic(const std::string &chan, const std::string &topic);
 	int		mode(const std::string &target, const std::string &);
+	int		quit_server(const std::string &message);
 
 public:
+	enum recv_e {
+		RECV_ERR = -1,
+		RECV_OVER = 0,
+		RECV_OK = 1,
+	};
+
 	Client(int fd, Server &serv) : fd(fd), serv(serv), pass(false), auth(false) { (void)auth; };
 	~Client() { /*close(fd);*/ }
 
-	int		receive();
+	recv_e	receive();
 	int		send(const std::string &) const;
 
 	const int			&get_fd() const			{ return fd; }

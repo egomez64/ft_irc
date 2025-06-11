@@ -1,12 +1,9 @@
 
-multicommands mode (FIX)
-
-Understand leaving clients
 Welcome: 1 2 3 4 5
 PING PONG
 
-Commit regularly
+PASS
 
-005: MODES:1 TARGEMAX=JOIN:1,PRIVMSG:1,KICK:1		????
+Commit regularly
 
 signaux

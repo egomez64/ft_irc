@@ -18,7 +18,6 @@ int Server::setSocket(in_port_t port)
 {
 	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		std::perror("socket");
-		// std::strerror(errno);
 		return -1;
 	}
 
@@ -41,7 +40,7 @@ int Server::setSocket(in_port_t port)
 		return -1;
 	}
 
-	std::cout << "Server listening on port " << port << '\n';
+	PRINT("Server listening on port " << port);
 
 	if (make_socket_non_blocking(server_fd) == -1) {
 		std::perror("listen");
@@ -93,7 +92,7 @@ int Server::acceptNew()
 		return -1;
 	}
 	clients.insert(std::make_pair(client_fd, Client(client_fd, *this)));
-	std::cout << "Client " << client_fd << " accepted.\n";
+	PRINT("Client " << client_fd << " accepted.");
 
 	make_socket_non_blocking(client_fd);
 
@@ -111,8 +110,15 @@ int Server::acceptNew()
 
 int Server::receive(Client &client)
 {
-	client.receive();
-	return 0;
+	Client::recv_e	result;
+	if ((result = client.receive()) == Client::RECV_ERR)
+		return -1;
+	else if (result == Client::RECV_OVER) {
+		removeClient(client);
+		return 0;
+	}
+	else
+		return 0;
 }
 
 Server::Server(in_port_t port, const std::string &password)
@@ -124,6 +130,8 @@ Server::Server(in_port_t port, const std::string &password)
 
 Server::~Server()
 {
+	for (std::map<const int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+		removeClient(it->second);
 	close(server_fd);
 	close(epoll_fd);
 }
@@ -133,16 +141,15 @@ int Server::listenLoop()
 	epoll_event	events[max_events];
 	bool		running = true;
 
+	PRINT("Listen loop");
 	while (running) {
 		int		n_fds;
 		if ((n_fds = epoll_wait(epoll_fd, events, max_events, -1)) == -1) {
 			std::perror("epoll_wait");
 			return -1;
 		}
-		std::cout << "epoll_wait\n";
 
 		for (int i = 0; i < n_fds; i++) {
-			std::cout << "event: " << i << "\n";
 			std::map<int, Client>::iterator	client;
 
 			if (events[i].data.fd == STDIN_FILENO) {
@@ -151,14 +158,18 @@ int Server::listenLoop()
 				if (input == "quit" || input == "exit") {
 					running = false;
 					return 0;
-				}				
+				}
 			}
-			else if (events[i].data.fd == server_fd)
+			else if (events[i].data.fd == server_fd) {
+				PRINT("acceptNew");
 				acceptNew();
-			else if ((client = clients.find(events[i].data.fd)) != clients.end())
+			}
+			else if ((client = clients.find(events[i].data.fd)) != clients.end()) {
+				PRINT("receive");
 				receive(client->second);
+			}
 			else
-				std::cout << "\tunknown event_fd: " << events[i].data.fd << '\n';
+				PRINT("\tunknown event_fd: " << events[i].data.fd);
 		}
 	}
 	return 0;
@@ -166,16 +177,9 @@ int Server::listenLoop()
 
 bool Server::test_password(const std::string &str)
 {
-	PRINT("test: " << str);
-	PRINT("Password: " << password);
-	PRINT("return: " << (str == password));
 	for (int i = 0; str.c_str()[i] || password.c_str()[i]; i++) {
-		if (str.c_str()[i] != password.c_str()[i]) {
-			PRINT("i: " << i);
-			PRINT("test[" << i << "]: " << (int) str.c_str()[i]);
-			PRINT("Password[" << i << "]: " << (int) password.c_str()[i]);
+		if (str.c_str()[i] != password.c_str()[i])
 			break;
-		}
 	}
 	return (str == password);
 }
@@ -217,4 +221,15 @@ const Client *Server::findClient(const std::string &nickname) const
 			return &it->second;
 	}
 	return NULL;
+}
+
+int Server::removeClient(const Client &client)
+{
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client.get_fd(), NULL) == -1) {
+		std::perror("epoll_ctl");
+		return -1;
+	}
+	close(client.get_fd());
+	clients.erase(client.get_fd());
+	return 0;
 }
