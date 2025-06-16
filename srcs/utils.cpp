@@ -27,3 +27,11 @@ std::vector<std::string> split_on_char(std::string s, char sep)
 
 	return tokens;
 }
+
+std::string to_lower_str(std::string &str)
+{
+	std::string res;
+	for (std::string::iterator it = str.begin(); it != str.end(); it++)
+		res.push_back(std::tolower(*it));
+	return (res);
+}

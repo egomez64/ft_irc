@@ -4,3 +4,7 @@ INVITE
 Commit regularly
 
 signaux
+
+throw exceptions
+
+refaire le censor bot, boucle while(find(vulg)) -> remplacer par '*' direct dans la string
