@@ -114,7 +114,7 @@ int Server::receive(Client &client)
 	if ((result = client.receive()) == Client::RECV_ERR)
 		return -1;
 	else if (result == Client::RECV_OVER) {
-		removeClient(client);
+		remove_client(client);
 		return 0;
 	}
 	else
@@ -131,7 +131,7 @@ Server::Server(in_port_t port, const std::string &password)
 Server::~Server()
 {
 	for (std::map<const int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
-		removeClient(it->second);
+		remove_client(it->second);
 	close(server_fd);
 	close(epoll_fd);
 }
@@ -175,15 +175,6 @@ int Server::listenLoop()
 	return 0;
 }
 
-bool Server::test_password(const std::string &str)
-{
-	for (int i = 0; str.c_str()[i] || password.c_str()[i]; i++) {
-		if (str.c_str()[i] != password.c_str()[i])
-			break;
-	}
-	return (str == password);
-}
-
 Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name, const std::string &key)
 {
 	Channel		*chan;
@@ -205,7 +196,7 @@ Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name
 	}
 }
 
-bool Server::nick_test(const std::string &nickname)
+bool Server::test_nickname(const std::string &nickname) const
 {
 	for (std::map<const int, Client>::const_iterator it = clients.begin(); it != clients.end(); it++) {
 		if (it->second.get_nickname() == nickname)
@@ -214,7 +205,7 @@ bool Server::nick_test(const std::string &nickname)
 	return true;
 }
 
-const Client *Server::findClient(const std::string &nickname) const
+const Client *Server::find_client(const std::string &nickname) const
 {
 	for (std::map<const int, Client>::const_iterator it = clients.begin(); it != clients.end(); it++) {
 		if (it->second.get_nickname() == nickname)
@@ -223,7 +214,7 @@ const Client *Server::findClient(const std::string &nickname) const
 	return NULL;
 }
 
-int Server::removeClient(const Client &client)
+int Server::remove_client(const Client &client)
 {
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client.get_fd(), NULL) == -1) {
 		std::perror("epoll_ctl");

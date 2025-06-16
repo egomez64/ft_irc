@@ -2,21 +2,18 @@
 
 Client::cmds Client::parse_register(const std::string &str)
 {
-	if (str == "CAP")
-		return CAP;
-	else if (str == "PASS")
-		return PASS;
-	else if (str == "NICK")
-		return NICK;
-	else if (str == "USER")
-		return USER;
-	else
-		return INVALID;
+	if (str == "CAP")			return CAP;
+	else if (str == "PASS")		return PASS;
+	else if (str == "NICK")		return NICK;
+	else if (str == "USER")		return USER;
+	else						return INVALID;
 }
 
 Client::cmds Client::parse_cmd(const std::string &str)
 {
-	if (str == "JOIN")			return JOIN;
+	if (str == "NICK")			return NICK;
+	else if (str == "PING")		return PING;
+	else if (str == "JOIN")		return JOIN;
 	else if (str == "PRIVMSG")	return PRIVMSG;
 	else if (str == "KICK")		return KICK;
 	else if (str == "INVITE")	return INVITE;
@@ -25,7 +22,29 @@ Client::cmds Client::parse_cmd(const std::string &str)
 	else						return INVALID;
 }
 
-void Client::check_auth()
+bool Client::test_nickname(std::string &str)
+{
+	for (std::string::iterator it = str.begin(); it != str.end(); ++it) {
+		switch (*it)
+		{
+		case '[':	break;
+		case ']':	break;
+		case '{':	break;
+		case '}':	break;
+		case '\\':	break;
+		case '|':	break;
+
+		default:
+			if (std::isalnum(*it))
+				break;
+			else
+				return false;
+		}
+	}
+	return true;
+}
+
+void Client::set_auth()
 {
 	auth = pass && !nickname.empty() && !username.empty();
 	if (!auth)
@@ -47,32 +66,50 @@ int Client::exec_cmd(const std::string &cmd)
 		std::size_t	pos;
 
 	case PASS:
-		if (split_cmd.size() != 2)
+		if (split_cmd.size() != 2) {
+			send(ERR_NEEDMOREPARAMS(nickname, cmd));
 			return -1;
+		}
 		pass = serv.test_password(split_cmd[1]);
-		check_auth();
+		if (!pass) {
+			send(ERR_PASSWDMISMATCH(nickname));
+			return -1;
+		}
 		break;
 
 	case NICK:
-		if (split_cmd.size() != 2)
+		if (!pass) {
+			send(ERR_PASSWDMISMATCH(nickname));
 			return -1;
-		if (!serv.nick_test(split_cmd[1])) {
+		}
+		if (split_cmd.size() != 2) {
+			send(ERR_NONICKNAMEGIVEN(nickname, cmd));
+			return -1;
+		}
+		if (!test_nickname(split_cmd[0])) {
+			send(ERR_ERRONEUSNICKNAME(nickname, split_cmd[0]));
+			return -1;
+		}
+		if (!serv.test_nickname(split_cmd[1])) {
 			send(ERR_NICKNAMEINUSE(split_cmd[1]));
 			return -1;
 		}
 		nickname = split_cmd[1];
-		check_auth();
+		set_auth();
 		break;
 
 	case USER:
-		if (split_cmd.size() < 2)
+		if (!pass) {
+			send(ERR_PASSWDMISMATCH(nickname));
 			return -1;
+		}
+		if (split_cmd.size() < 2 || split_cmd[1].length() < 1) {
+			send(ERR_NEEDMOREPARAMS(nickname, cmd));
+			return -1;
+		}
 		username = split_cmd[1];
-		check_auth();
+		set_auth();
 		break;
-
-	case INVALID:
-		return -1;
 
 	case JOIN:
 		if (split_cmd.size() < 2)
@@ -125,6 +162,19 @@ int Client::exec_cmd(const std::string &cmd)
 		mode(split_cmd[1], cmd.substr(pos, cmd.length() - pos));
 		break;
 
+	case INVALID:
+		if (!auth) {
+			if (!pass)
+				send(ERR_PASSWDMISMATCH(nickname));
+			else if (parse_cmd(split_cmd[0]) != INVALID)
+				send(ERR_NOTREGISTERED());
+		}
+		else if (auth && parse_register(split_cmd[0]) != INVALID)
+			send(ERR_ALREADYREGISTRED(nickname));
+		else
+			send(ERR_UNKNOWNCOMMAND(nickname, cmd));
+		return -1;
+
 	default:
 		break;
 	}
@@ -166,7 +216,7 @@ int Client::privmsg(const std::string &target, const std::string &msg)
 	}
 	else {
 		const Client	*client;
-		if ((client = serv.findClient(target)) == NULL) {
+		if ((client = serv.find_client(target)) == NULL) {
 			send(ERR_NOSUCHNICK(nickname, target));
 			return -1;
 		}

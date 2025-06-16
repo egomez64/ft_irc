@@ -43,7 +43,9 @@ private:
 
 	static cmds		parse_register(const std::string &);
 	static cmds		parse_cmd(const std::string &);
-	void	check_auth();
+	static bool		test_nickname(std::string &);
+	void			set_auth();
+
 	int		exec_cmd(const std::string &);
 	int		join(const std::string &chan, const std::string key = "");
 	int		privmsg(const std::string &target, const std::string &msg);
