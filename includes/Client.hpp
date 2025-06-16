@@ -47,6 +47,8 @@ private:
 	void			set_auth();
 
 	int		exec_cmd(const std::string &);
+
+	// Commands
 	int		join(const std::string &chan, const std::string key = "");
 	int		privmsg(const std::string &target, const std::string &msg);
 	int		kick(const std::string &chan, const std::string &user, const std::string &reason = "");

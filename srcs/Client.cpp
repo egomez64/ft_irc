@@ -112,8 +112,10 @@ int Client::exec_cmd(const std::string &cmd)
 		break;
 
 	case JOIN:
-		if (split_cmd.size() < 2)
+		if (split_cmd.size() < 2) {
+			send(ERR_NEEDMOREPARAMS(nickname, cmd));
 			return -1;
+		}
 		join(split_cmd[1]);
 		break;
 
@@ -125,8 +127,7 @@ int Client::exec_cmd(const std::string &cmd)
 				send(ERR_NOTEXTTOSEND(nickname));
 			return -1;
 		}
-		pos = cmd.find_first_of(':') + 1;
-		privmsg(split_cmd[1], PRIVMSG(nickname, split_cmd[1], cmd.substr(pos, cmd.length() - pos)));
+		privmsg(split_cmd[1], PRIVMSG(nickname, split_cmd[1], cmd.substr(cmd.find_first_of(':') + 1)));
 		break;
 	
 	case KICK:
@@ -138,7 +139,7 @@ int Client::exec_cmd(const std::string &cmd)
 		break;
 
 	case TOPIC:
-		if (split_cmd.size() < 2){
+		if (split_cmd.size() < 2) {
 			send(ERR_NEEDMOREPARAMS(nickname, cmd));
 			return -1;
 		}
@@ -147,19 +148,19 @@ int Client::exec_cmd(const std::string &cmd)
 			see_topic(split_cmd[1]);
 			break;
 		}
-		++pos;
-		topic(split_cmd[1], cmd.substr(pos, cmd.length() - pos));
+		topic(split_cmd[1], cmd.substr(pos + 1));
 		break;
 	
 	case MODE:
-		if (split_cmd.size() < 2)
+		if (split_cmd.size() < 2) {
+			send(ERR_NEEDMOREPARAMS(nickname, cmd));
 			return -1;
+		}
 		if (split_cmd.size() == 2) {
 			mode(split_cmd[1], "");
 			break;
 		}
-		pos = cmd.find_first_of(' ', cmd.find_first_of(' ') + 1) + 1;
-		mode(split_cmd[1], cmd.substr(pos, cmd.length() - pos));
+		mode(split_cmd[1], cmd.substr(cmd.find_first_of(' ', cmd.find_first_of(' ') + 1) + 1));
 		break;
 
 	case INVALID:
