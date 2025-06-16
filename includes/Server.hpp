@@ -8,6 +8,7 @@
 # include <map>
 # include <iostream>
 # include <sstream>
+# include <ctime>
 
 # include <cstdlib>
 # include <cstdio>
@@ -26,9 +27,11 @@ class Channel;
 class Server
 {
 private:
+	std::string	name;
 	std::string	password;
 	int			server_fd;
 	int			epoll_fd;
+	time_t		creation_time;
 
 	std::map<const int, Client>				clients;
 	std::map<const std::string, Channel>	channels;
@@ -57,6 +60,9 @@ public:
 	const Client	*find_client(const std::string &nickname) const;
 	int				remove_client(const Client &);
 	Channel			*add_client_to_chan(Client &, const std::string &channel, const std::string &key);
+
+	const std::string	&get_name() const			{ return name; }
+	std::string			get_creation_time() const	{ return std::string(std::ctime(&creation_time)); }
 };
 
 #endif // SERVER_HPP

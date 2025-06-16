@@ -20,6 +20,7 @@ private:
 		PASS,
 		NICK,
 		USER,
+		PING,
 		JOIN,
 		PRIVMSG,
 		KICK,

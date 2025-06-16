@@ -12,7 +12,13 @@
 #define RPL_TOPIC(client, channel, topic)			(":" + client + " TOPIC " + channel + " :" + topic + "\r\n")
 #define RPL_QUIT(client, message)					(":" + client + " QUIT :" + message + "\r\n")
 
-#define RPL_WELCOME(nickname, client)				(": 001 " + nickname + " :Welcome to the IRC world, " + client + "\r\n")
+#define RPL_WELCOME(nickname, username)				(": 001 " + nickname + " :Welcome to the IRC world, " + username + "\r\n")
+#define RPL_YOURHOST(client, servername, version)	(": 002 " + client + " :Your host is " + servername + ", running version " + version + "\r\n")
+#define RPL_CREATED(client, datetime)				(": 003" + client + " :This server was created " + datetime + "\r\n")
+#define RPL_MYINFO(client, servername, version,\
+	user_modes, c_modes, c_modes_param)				(": 004 " + client + ' ' + servername + ' ' + version + ' ' + user_modes + ' ' + c_modes + ' '\
+														+ c_modes_param + "\r\n")
+#define RPL_ISUPPORT(client, tokens)				(": 005 " + client + ' ' + tokens + " :are supported by this server\r\n")
 #define RPL_UMODEIS(client, user_modes)				(": 221 " + client + ' ' + user_modes + "\r\n")
 #define RPL_CHANNELMODEIS(client, channel, modes) 	(": 324 " + client + ' ' + channel + ' ' + modes + "\r\n")
 #define RPL_CREATIONTIME(client, channel, \
@@ -24,6 +30,7 @@
 #define RPL_INVITESNDR(client, invitee, channel)	(": 341 " + client + ' ' + invitee + ' ' + channel + "\r\n")
 #define RPL_NAMREPLY(client, channel, nicknames)	(": 353 " + client + " = " + channel + " :" + nicknames + "\r\n")
 #define RPL_ENDOFNAMES(client, channel)				(": 366 " + client + ' ' + channel + " :End of /NAMES list.\r\n")
+#define RPL_MOTD(client, line)						(": 372 " + client + ' ' + line + "\r\n")
 
 #define ERR_TOOMUCHPARAMS(client, cmd)				(client + ' ' + cmd + " :Too much parameters\r\n")
 #define ERR_NOSUCHNICK(client, nickname) 			(": 401 " + client + ' ' + nickname + " :No such nick/channel\r\n")

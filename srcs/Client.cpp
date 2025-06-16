@@ -50,9 +50,27 @@ void Client::set_auth()
 	if (!auth)
 		return;
 
-	std::cout << username << " \"" << nickname << "\" authentificated.\n";
-	const std::string	msg("Welcome to our Server " + username +" \"" + nickname + "\""  +  ".\n\r");
-	send(msg);
+	const std::string	version("1.0");
+	const std::string	user_modes("");
+	const std::string	c_modes("it");
+	const std::string	c_modes_param("kol");
+	const std::string	support_tokens(
+		"CHANMODES=,k,l,it "
+		"CHANTYPES=# "
+		"PREFIX=(o)@"
+	);
+	const std::string	message_of_the_day(
+		"Welcome to ft_IRC.\n"
+		"We hope you have a good time on our server!"
+	);
+
+	send(RPL_WELCOME(nickname, username));
+	send(RPL_YOURHOST(nickname, serv.get_name(), version));
+	send(RPL_CREATED(nickname, serv.get_creation_time()));
+	send(RPL_MYINFO(nickname, serv.get_name(), version, user_modes, c_modes, c_modes_param));
+	send(RPL_ISUPPORT(nickname, support_tokens));
+
+	send(RPL_MOTD(nickname, message_of_the_day));
 }
 
 int Client::exec_cmd(const std::string &cmd)
@@ -109,6 +127,14 @@ int Client::exec_cmd(const std::string &cmd)
 		}
 		username = split_cmd[1];
 		set_auth();
+		break;
+
+	case PING:
+		if (split_cmd.size() < 2) {
+			send(ERR_NEEDMOREPARAMS(nickname, cmd));
+			return -1;
+		}
+		send("PONG " + serv.get_name() + cmd.substr(cmd.find_first_of(' ') + 1) + "\r\n");
 		break;
 
 	case JOIN:

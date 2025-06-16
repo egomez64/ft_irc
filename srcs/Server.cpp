@@ -122,10 +122,12 @@ int Server::receive(Client &client)
 }
 
 Server::Server(in_port_t port, const std::string &password)
-	: password(password)
+	: name("ircserv")
+	, password(password)
 {
 	setSocket(port);
 	setEpoll();
+	creation_time = std::time(NULL);
 }
 
 Server::~Server()
