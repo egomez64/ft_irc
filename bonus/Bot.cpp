@@ -1,10 +1,21 @@
 #include "Bot.hpp"
 
 Bot::Bot()
+	: name("Bot")
+	, active(true)
 {
-	name = "Bot";
-	std::string words[] = ["con", "connard", "pute", "petasse", "encule"];
-	vulg (words, words + 5);
+	try
+	{
+		std::ifstream	file("vocabulary.txt");
+		std::string		word;
+
+		while (std::getline(file, word))
+			vulg.insert(word);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
 }
 
 std::string Bot::censor(std::string &str)
