@@ -43,10 +43,9 @@ private:
 	std::string	name;
 	topic_t		topic;
 
-	Server	&serv;
-
 	std::map<const std::string, Client &>	clients;
 	std::set<std::string>					operators;
+	std::set<std::string>					invite_list;
 
 	modes_t		modes;
 
@@ -56,16 +55,16 @@ private:
 
 public:
 	// constructor
-	Channel(const std::string &name, Client &, Server &serv);
+	Channel(const std::string &name, Client &);
 
 	// class methods
-	int		add_client(Client &, const std::string &key);
+	int		join(Client &, const std::string &key);
 	int		msg(const std::string &msg);
 	int		msg(const Client &, const std::string &msg);
 
 	bool	is_operator(const std::string &) const;
-	int		kick(const Client& _operator, const std::string &target, const std::string &reason);
-	int		invite(const Client& _operator, Client& target);
+	int		kick(const Client& client, const std::string &target, const std::string &reason);
+	int		invite(const Client& client, const Client *target);
 	int		see_topic(const Client & client);
 	int		change_topic(const Client & client, const std::string &);
 	int		change_modes(Client &, const std::string &);
@@ -73,8 +72,8 @@ public:
 	// getters
 	const std::string	&getName() const		{ return name; }
 	const std::string	&getPassword() const	{ return modes.key; }
-	std::pair<std::map<const std::string, Client &>::const_iterator, std::map<const std::string, Client &>::const_iterator>
-						&getClients() const;
+	const std::map<const std::string, Client &>
+						&getClients() const		{ return clients; }
 
 	// setters
 	void	setName(const std::string &_name)			{ name = _name; }

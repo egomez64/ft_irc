@@ -42,34 +42,37 @@ void Channel::remove_client(const std::string &nickname)
 	operators.erase(nickname);
 }
 
-Channel::Channel(const std::string &name, Client &client, Server &serv)
+Channel::Channel(const std::string &name, Client &client)
 	: name(name)
-	, serv(serv)
 {
 	std::string		key;
 
 	operators.insert(client.get_nickname());
-	add_client(client, key);
+	join(client, key);
 }
 
-int Channel::add_client(Client &client, const std::string &key)
+int Channel::join(Client &client, const std::string &key)
 {
 	const std::string	nickname = client.get_nickname();
 
 	if (clients.find(nickname) != clients.end())
 		return -1;
-	if (!modes.key.empty() && key != modes.key) {
-		client.send(ERR_BADCHANNELKEY(nickname, name));
-		return -1;
+	if (invite_list.find(nickname) == invite_list.end()) {
+		if (!modes.key.empty() && key != modes.key) {
+			client.send(ERR_BADCHANNELKEY(nickname, name));
+			return -1;
+		}
+		if (modes.invite) {
+			client.send(ERR_INVITEONLYCHAN(nickname, name));
+			return -1;
+		}
+		if (modes.limit != 0 && clients.size() >= modes.limit) {
+			client.send(ERR_CHANNELISFULL(nickname, name));
+			return -1;
+		}
 	}
-	if (modes.invite) {
-		client.send(ERR_INVITEONLYCHAN(nickname, name));
-		return -1;
-	}
-	if (modes.limit != 0 && clients.size() >= modes.limit) {
-		client.send(ERR_CHANNELISFULL(nickname, name));
-		return -1;
-	}
+	else
+		invite_list.erase(nickname);
 	clients.insert(std::pair<const std::string, Client &>(nickname, client));
 	msg(RPL_JOIN(nickname, name));
 	if (topic.topic.empty())
@@ -104,22 +107,42 @@ bool Channel::is_operator(const std::string &nickname) const
 	return (std::find(operators.begin(), operators.end(), nickname) != operators.end());
 }
 
-int Channel::kick(const Client &_operator, const std::string &target, const std::string &reason)
+int Channel::kick(const Client &client, const std::string &target, const std::string &reason)
 {
-	std::set<std::string>::iterator it = std::find(operators.begin(), operators.end(), _operator.get_nickname());
+	std::set<std::string>::iterator it = std::find(operators.begin(), operators.end(), client.get_nickname());
 
 	if (it == operators.end()) {
-		_operator.send(ERR_CHANOPRIVSNEEDED(_operator.get_nickname(), name));
+		client.send(ERR_CHANOPRIVSNEEDED(client.get_nickname(), name));
 		return -1;
 	}
 	std::map<const std::string, Client &>::iterator	target_it = clients.find(target);
 	if (target_it == clients.end()){
-		_operator.send(ERR_USERNOTINCHANNEL(_operator.get_nickname(), target, name));
+		client.send(ERR_USERNOTINCHANNEL(client.get_nickname(), target, name));
 		return -1;
 	}
-	msg(RPL_KICK(_operator.get_nickname(), name, target, reason));
+	msg(RPL_KICK(client.get_nickname(), name, target, reason));
 	target_it->second.remove_chan(name);
 	remove_client(target);
+	return 0;
+}
+
+int Channel::invite(const Client &client, const Client *target)
+{
+	if (clients.find(client.get_nickname()) == clients.end()) {
+		client.send(ERR_NOTONCHANNEL(client.get_nickname(), name));
+		return -1;
+	}
+	if (operators.find(client.get_nickname()) == operators.end()) {
+		client.send(ERR_CHANOPRIVSNEEDED(client.get_nickname(), name));
+		return -1;
+	}
+	if (clients.find(target->get_nickname()) != clients.end()) {
+		client.send(ERR_USERONCHANNEL(client.get_nickname(), target->get_nickname(), name));
+		return -1;
+	}
+	invite_list.insert(target->get_nickname());
+	client.send(RPL_INVITING(client.get_nickname(), target->get_nickname(), name));
+	target->send(RPL_INVITERCVR(client.get_nickname(), target->get_nickname(), name));
 	return 0;
 }
 
@@ -285,14 +308,6 @@ int Channel::change_modes(Client &client, const std::string &str)
 		}
 	}
 	return 0;
-}
-
-std::pair<std::map<const std::string, Client &>::const_iterator, std::map<const std::string, Client &>::const_iterator> &Channel::getClients() const
-{
-	std::pair<std::map<const std::string, Client &>::const_iterator, std::map<const std::string, Client &>::const_iterator> clients_range;
-	clients_range.first = clients.begin();
-	clients_range.second = clients.end();
-	return clients_range;
 }
 
 void Channel::setTopic(const std::string &topic, const std::string &nick)

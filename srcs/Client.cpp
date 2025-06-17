@@ -113,7 +113,8 @@ int Client::exec_cmd(const std::string &cmd)
 			return -1;
 		}
 		nickname = split_cmd[1];
-		set_auth();
+		if (!auth)
+			set_auth();
 		break;
 
 	case USER:
@@ -142,7 +143,10 @@ int Client::exec_cmd(const std::string &cmd)
 			send(ERR_NEEDMOREPARAMS(nickname, cmd));
 			return -1;
 		}
-		join(split_cmd[1]);
+		if (split_cmd.size() == 2)
+			join(split_cmd[1]);
+		else
+			join(split_cmd[1], split_cmd[2]);
 		break;
 
 	case PRIVMSG:
@@ -161,7 +165,19 @@ int Client::exec_cmd(const std::string &cmd)
 			send(ERR_NEEDMOREPARAMS(nickname, cmd));
 			return -1;
 		}
-		kick(split_cmd[1], split_cmd[2]);
+		pos = cmd.find_first_of(':');
+		if (pos == std::string::npos)
+			kick(split_cmd[1], split_cmd[2], "No reason specified");
+		else
+			kick(split_cmd[1], split_cmd[2], cmd.substr(pos + 1));
+		break;
+
+	case INVITE:
+		if (split_cmd.size() < 3) {
+			send(ERR_NEEDMOREPARAMS(nickname, cmd));
+			return -1;
+		}
+		invite(split_cmd[1], split_cmd[2]);
 		break;
 
 	case TOPIC:
@@ -222,7 +238,7 @@ int Client::join(const std::string &chan_name, const std::string key)
 			continue ;
 		}
 		if ((chan = serv.add_client_to_chan(*this, *it_chan, *it_key)) == NULL) {
-			std::cout << "Couldn't add_client\n";
+			PRINT("Couldn't add_client");
 			continue ;
 		}
 		channels.insert(std::pair<const std::string, Channel &>(*it_chan, *chan));
@@ -260,6 +276,23 @@ int Client::kick(const std::string &chan, const std::string &user, const std::st
 		return -1;
 	}
 	it_chan->second.kick(*this, user, reason);
+	return 0;
+}
+
+int Client::invite(const std::string &target, const std::string &chan_name)
+{
+	Channel			*chan;
+	const Client	*invitee;
+
+	if ((chan = serv.find_channel(chan_name)) == NULL) {
+		send(ERR_NOSUCHCHANNEL(nickname, chan_name));
+		return -1;
+	}
+	if ((invitee = serv.find_client(target)) == NULL) {
+		send(ERR_NOSUCHNICK(nickname, target));
+		return -1;
+	}
+	chan->invite(*this, invitee);
 	return 0;
 }
 
@@ -305,17 +338,16 @@ int Client::mode(const std::string &target, const std::string &str)
 
 int Client::quit_server(const std::string &message)
 {
-	std::set<Client &>	friends;
+	std::map<const std::string, Client &>	friends;
 
-	for (std::map<const std::string, Channel &>::iterator chan = channels.begin(); chan != channels.end(); ++chan) {
-		std::pair<std::map<const std::string, Client &>::const_iterator, std::map<const std::string, Client &>::const_iterator> range;
-		range = chan->second.getClients();
-		friends.insert(range.first, range.second);
-	}
-	friends.erase(*this);
-	for (std::set<Client &>::iterator it = friends.begin(); it != friends.end(); ++it) {
-		it->send(RPL_QUIT(nickname, message));
-	}
+	for (std::map<const std::string, Channel &>::iterator chan = channels.begin(); chan != channels.end(); ++chan)
+		friends.insert(chan->second.getClients().begin(), chan->second.getClients().end());
+
+	friends.erase(nickname);
+
+	for (std::map<const std::string, Client &>::iterator it = friends.begin(); it != friends.end(); ++it)
+		it->second.send(RPL_QUIT(nickname, message));
+
 	return 0;
 }
 
@@ -326,7 +358,7 @@ Client::recv_e Client::receive()
 
 	ssize_t	bytes_read = recv(fd, buff, buff_size - 1, 0);
 	if (bytes_read == -1) {
-		std::perror("recv");
+		// std::perror("recv");
 		return RECV_ERR;
 	}
 	else if (bytes_read == 0) {

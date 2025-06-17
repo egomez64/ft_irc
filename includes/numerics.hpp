@@ -27,7 +27,7 @@
 #define RPL_SEETOPIC(client, channel, topic)		(": 332 " + client + ' ' + channel + " :" + topic + "\r\n")
 #define RPL_TOPICWHOTIME(client, channel, nick, \
 	setat)											(": 333 " + client + ' ' + channel + ' ' + nick + ' ' + setat + "\r\n")
-#define RPL_INVITESNDR(client, invitee, channel)	(": 341 " + client + ' ' + invitee + ' ' + channel + "\r\n")
+#define RPL_INVITING(client, nick, channel)			(": 341 " + client + ' ' + nick + ' ' + channel + "\r\n")
 #define RPL_NAMREPLY(client, channel, nicknames)	(": 353 " + client + " = " + channel + " :" + nicknames + "\r\n")
 #define RPL_ENDOFNAMES(client, channel)				(": 366 " + client + ' ' + channel + " :End of /NAMES list.\r\n")
 #define RPL_MOTD(client, line)						(": 372 " + client + ' ' + line + "\r\n")
@@ -44,7 +44,7 @@
 #define ERR_NICKNAMEINUSE(nick)						(": 433 * " + nick + " :Nickname is already in use\r\n")
 #define ERR_USERNOTINCHANNEL(client, nick, channel)	(": 441 " + client + ' ' + nick + ' ' + channel + " :They aren't on that channel\r\n")
 #define ERR_NOTONCHANNEL(client, channel)			(": 442 " + client + ' ' + channel + " :You're not on that channel\r\n")
-#define ERR_USERONCHANNEL(nick, channel)			(": 443 " + nick + ' ' + channel + " :is already on channel\r\n")
+#define ERR_USERONCHANNEL(client, nick, channel)	(": 443 " + client + ' ' + nick + ' ' + channel + " :is already on channel\r\n")
 #define ERR_NOTREGISTERED()							(": 451 :You have not registered\r\n")
 #define ERR_NEEDMOREPARAMS(client, cmd)				(": 461 " + client + ' ' + cmd + " :Not enough parameters\r\n")
 #define ERR_ALREADYREGISTRED(client)				(": 462 " + client + " ::Unauthorized command (already registered)\r\n")

@@ -58,6 +58,7 @@ public:
 	bool			test_password(const std::string &str) const { return str == password ;}
 	bool			test_nickname(const std::string &nickname) const;
 	const Client	*find_client(const std::string &nickname) const;
+	Channel			*find_channel(const std::string &chan);
 	int				remove_client(const Client &);
 	Channel			*add_client_to_chan(Client &, const std::string &channel, const std::string &key);
 

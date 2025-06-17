@@ -52,8 +52,8 @@ private:
 	// Commands
 	int		join(const std::string &chan, const std::string key = "");
 	int		privmsg(const std::string &target, const std::string &msg);
-	int		kick(const std::string &chan, const std::string &user, const std::string &reason = "");
-	// int		invite();
+	int		kick(const std::string &chan, const std::string &user, const std::string &reason);
+	int		invite(const std::string &target, const std::string &chan);
 	int		see_topic(const std::string &chan);
 	int		topic(const std::string &chan, const std::string &topic);
 	int		mode(const std::string &target, const std::string &);

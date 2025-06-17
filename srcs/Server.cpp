@@ -143,7 +143,6 @@ int Server::listenLoop()
 	epoll_event	events[max_events];
 	bool		running = true;
 
-	PRINT("Listen loop");
 	while (running) {
 		int		n_fds;
 		if ((n_fds = epoll_wait(epoll_fd, events, max_events, -1)) == -1) {
@@ -162,14 +161,10 @@ int Server::listenLoop()
 					return 0;
 				}
 			}
-			else if (events[i].data.fd == server_fd) {
-				PRINT("acceptNew");
+			else if (events[i].data.fd == server_fd)
 				acceptNew();
-			}
-			else if ((client = clients.find(events[i].data.fd)) != clients.end()) {
-				PRINT("receive");
+			else if ((client = clients.find(events[i].data.fd)) != clients.end())
 				receive(client->second);
-			}
 			else
 				PRINT("\tunknown event_fd: " << events[i].data.fd);
 		}
@@ -184,13 +179,13 @@ Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name
 
 	if ((it = channels.find(chan_name)) != channels.end()) {
 		chan = &it->second;
-		if (chan->add_client(client, key) == -1)
+		if (chan->join(client, key) == -1)
 			return NULL;
 		return chan;
 	}
 	else {
 		std::pair<std::map<const std::string, Channel>::iterator, bool>
-			inserted = channels.insert(std::make_pair(chan_name, Channel(chan_name, client, *this)));
+			inserted = channels.insert(std::make_pair(chan_name, Channel(chan_name, client)));
 
 		if (!inserted.second)
 			return NULL;
@@ -216,6 +211,15 @@ const Client *Server::find_client(const std::string &nickname) const
 	return NULL;
 }
 
+Channel *Server::find_channel(const std::string &chan)
+{
+	std::map<const std::string, Channel>::iterator	it;
+	if ((it = channels.find(chan)) == channels.end()) {
+		return NULL;
+	}
+	return &it->second;
+}
+
 int Server::remove_client(const Client &client)
 {
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client.get_fd(), NULL) == -1) {
@@ -223,6 +227,5 @@ int Server::remove_client(const Client &client)
 		return -1;
 	}
 	close(client.get_fd());
-	clients.erase(client.get_fd());
 	return 0;
 }
