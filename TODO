@@ -1,8 +1,18 @@
 Commit regularly
 
-finir le censor bot
+finir le censor bot:
+	epoll ?
+	parse from server
+	censor/kick
 
 send: Bad file descriptor
 epoll_ctl: Bad file descriptor
 ^Cepoll_wait: Interrupted system call
 
+Ctrl-Z et fg
+Parsing du port
+./ircserv 6697 ""
+
+?????????
+	port < 1024 || port > 65535
+	IPPROTO_TCP
