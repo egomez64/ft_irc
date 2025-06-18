@@ -283,14 +283,15 @@ int Channel::change_modes(Client &client, const std::string &str)
 					"You must specify a parameter for the limit mode. Syntax: <limit>."));
 				break;
 			}
+			errno = 0;
 			limit = std::strtol(split_mode[param - 1].c_str(), &endptr, 10);
-			if (limit <= 0) {
+			if (limit <= 0 || errno == ERANGE) {
 				limit = 0;
 				client.send(ERR_INVALIDMODEPARAM(client.get_nickname(), name, modestring[i], split_mode[param - 1],
 					"Invalid limit mode parameter. Syntax: <limit>."));
 				break;
 			}
-			if ((limit == static_cast<long>(modes.limit)) && *endptr != '\0')
+			if ((limit == static_cast<long>(modes.limit)) && *endptr == '\0')
 				break;
 
 			modes.limit = limit;
