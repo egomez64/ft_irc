@@ -112,9 +112,16 @@ int Client::exec_cmd(const std::string &cmd)
 			send(ERR_NICKNAMEINUSE(split_cmd[1]));
 			return -1;
 		}
-		nickname = split_cmd[1];
-		if (!auth)
+		if (!auth) {
+			nickname = split_cmd[1];
 			set_auth();
+		}
+		else {
+			PRINT("new nickname: " << split_cmd[1]);
+			send_friends(RPL_NICK(nickname, split_cmd[1]));
+			send(RPL_NICK(nickname, split_cmd[1]));
+			nickname = split_cmd[1];
+		}
 		break;
 
 	case USER:
@@ -336,7 +343,7 @@ int Client::mode(const std::string &target, const std::string &str)
 	return it_chan->second.change_modes(*this, str);
 }
 
-int Client::quit_server(const std::string &message)
+int Client::send_friends(const std::string &message)
 {
 	std::map<const std::string, Client &>	friends;
 
@@ -346,7 +353,7 @@ int Client::quit_server(const std::string &message)
 	friends.erase(nickname);
 
 	for (std::map<const std::string, Client &>::iterator it = friends.begin(); it != friends.end(); ++it)
-		it->second.send(RPL_QUIT(nickname, message));
+		it->second.send(message);
 
 	return 0;
 }
@@ -362,7 +369,7 @@ Client::recv_e Client::receive()
 		return RECV_ERR;
 	}
 	else if (bytes_read == 0) {
-		quit_server("Connection closed");
+		send_friends(RPL_QUIT(nickname, "Connection closed"));
 		return RECV_OVER;
 	}
 

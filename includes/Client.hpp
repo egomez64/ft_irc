@@ -57,7 +57,7 @@ private:
 	int		see_topic(const std::string &chan);
 	int		topic(const std::string &chan, const std::string &topic);
 	int		mode(const std::string &target, const std::string &);
-	int		quit_server(const std::string &message);
+	int		send_friends(const std::string &message);
 
 public:
 	enum recv_e {
