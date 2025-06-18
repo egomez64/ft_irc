@@ -1,7 +1,7 @@
 #include <iostream>
 #include <limits>
 
-#include "../includes/Server.hpp"
+#include <Server.hpp>
 
 Server	*g_serv_ptr = NULL;
 
