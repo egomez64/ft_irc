@@ -66,7 +66,7 @@ public:
 		RECV_OK = 1,
 	};
 
-	Client(int fd, Server &serv) : fd(fd), serv(serv), pass(false), auth(false) { (void)auth; };
+	Client(int fd, Server &serv, bool has_pass) : fd(fd), serv(serv), pass(!has_pass), auth(false) { (void)auth; };
 	~Client() { /*close(fd);*/ }
 
 	recv_e	receive();

@@ -91,7 +91,7 @@ int Server::acceptNew()
 		std::perror("accept");
 		return -1;
 	}
-	clients.insert(std::make_pair(client_fd, Client(client_fd, *this)));
+	clients.insert(std::make_pair(client_fd, Client(client_fd, *this, !password.empty())));
 	PRINT("Client " << client_fd << " accepted.");
 
 	make_socket_non_blocking(client_fd);
