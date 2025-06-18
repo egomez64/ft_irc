@@ -14,7 +14,7 @@
 
 #define RPL_WELCOME(nickname, username)				(": 001 " + nickname + " :Welcome to the IRC world, " + username + "\r\n")
 #define RPL_YOURHOST(client, servername, version)	(": 002 " + client + " :Your host is " + servername + ", running version " + version + "\r\n")
-#define RPL_CREATED(client, datetime)				(": 003" + client + " :This server was created " + datetime + "\r\n")
+#define RPL_CREATED(client, datetime)				(": 003 " + client + " :This server was created " + datetime + "\r\n")
 #define RPL_MYINFO(client, servername, version,\
 	user_modes, c_modes, c_modes_param)				(": 004 " + client + ' ' + servername + ' ' + version + ' ' + user_modes + ' ' + c_modes + ' '\
 														+ c_modes_param + "\r\n")

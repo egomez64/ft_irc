@@ -23,8 +23,8 @@ static int	parse_port(char *port_str)
 
 int main(int ac, char **av)
 {
-	if (ac != 3) {
-		std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
+	if (ac != 2 && ac != 3) {
+		std::cerr << "Usage: ./ircserv <port> [<password>]" << std::endl;
 		return 1;
 	}
 
@@ -32,8 +32,12 @@ int main(int ac, char **av)
 	if (port == -1)
 		return 1;
 
-	Server	server(port, av[2]);
-	
+	std::string	password;
+	if (ac == 3)
+		password = av[2];
+
+	Server	server(port, password);
+
 	g_serv_ptr = &server;
 
 	if (server.listenLoop() == -1)

@@ -11,7 +11,6 @@ epoll_ctl: Bad file descriptor
 
 Ctrl-Z et fg
 Parsing du port
-./ircserv 6697 ""
 
 ?????????
 	port < 1024 || port > 65535
