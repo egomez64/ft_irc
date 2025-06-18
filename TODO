@@ -1,5 +1,8 @@
 Commit regularly
 
-signaux
-
 finir le censor bot
+
+send: Bad file descriptor
+epoll_ctl: Bad file descriptor
+^Cepoll_wait: Interrupted system call
+

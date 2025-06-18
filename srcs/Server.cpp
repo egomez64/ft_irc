@@ -124,7 +124,9 @@ int Server::receive(Client &client)
 Server::Server(in_port_t port, const std::string &password)
 	: name("ircserv")
 	, password(password)
+	, running(true)
 {
+	signal(SIGINT, signal_handler);
 	setSocket(port);
 	setEpoll();
 	creation_time = std::time(NULL);
@@ -136,6 +138,7 @@ Server::~Server()
 		remove_client(it->second);
 	close(server_fd);
 	close(epoll_fd);
+	signal(SIGINT, SIG_DFL);
 }
 
 int Server::listenLoop()

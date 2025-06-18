@@ -9,6 +9,7 @@
 # include <iostream>
 # include <sstream>
 # include <ctime>
+# include <signal.h>
 
 # include <cstdlib>
 # include <cstdio>
@@ -24,6 +25,8 @@
 class Client;
 class Channel;
 
+void	signal_handler(int);
+
 class Server
 {
 private:
@@ -32,6 +35,7 @@ private:
 	int			server_fd;
 	int			epoll_fd;
 	time_t		creation_time;
+	bool		running;
 
 	std::map<const int, Client>				clients;
 	std::map<const std::string, Channel>	channels;
@@ -54,6 +58,7 @@ public:
 	~Server();
 
 	int		listenLoop();
+	void	closeServer()		{ running = false; }
 
 	bool			test_password(const std::string &str) const { return str == password ;}
 	bool			test_nickname(const std::string &nickname) const;

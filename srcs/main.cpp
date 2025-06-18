@@ -3,6 +3,14 @@
 
 #include "../includes/Server.hpp"
 
+Server	*g_serv_ptr = NULL;
+
+void	signal_handler(int)
+{
+	if (g_serv_ptr != NULL)
+		g_serv_ptr->closeServer();
+}
+
 static int	parse_port(char *port_str)
 {
 	int		port = std::atoi(port_str);
@@ -25,8 +33,11 @@ int main(int ac, char **av)
 		return 1;
 
 	Server	server(port, av[2]);
+	
+	g_serv_ptr = &server;
 
 	if (server.listenLoop() == -1)
 		return 1;
+
 	return 0;
 }
