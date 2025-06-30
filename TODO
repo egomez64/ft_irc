@@ -15,3 +15,5 @@ Parsing du port
 ?????????
 	port < 1024 || port > 65535
 	IPPROTO_TCP
+
+Gérer erreurs, fds leaks si erreur, exception si Constructeurs ne marchent pas
