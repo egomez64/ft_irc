@@ -22,7 +22,10 @@ int Server::setSocket(in_port_t port)
 	}
 
 	int		yes = 1;
-	setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof (yes));
+	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof (yes)) == -1) {
+		std::perror("setsockopt");
+		return -1;
+	}
 
 	sockaddr_in		server_addr;
 	std::memset(&server_addr, 0, sizeof (server_addr));
@@ -43,7 +46,7 @@ int Server::setSocket(in_port_t port)
 	PRINT("Server listening on port " << port);
 
 	if (make_socket_non_blocking(server_fd) == -1) {
-		std::perror("listen");
+		std::perror("fcntl");
 		return -1;
 	}
 
@@ -94,7 +97,10 @@ int Server::acceptNew()
 	clients.insert(std::make_pair(client_fd, Client(client_fd, *this, !password.empty())));
 	PRINT("Client " << client_fd << " accepted.");
 
-	make_socket_non_blocking(client_fd);
+	if (make_socket_non_blocking(client_fd) == -1) {
+		std::perror("fcntl");
+		return -1;
+	}
 
 	epoll_event		client_event;
 	std::memset(&client_event, 0, sizeof (client_event));

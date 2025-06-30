@@ -373,7 +373,7 @@ Client::recv_e Client::receive()
 		return RECV_OVER;
 	}
 
-	buff[bytes_read] = '\0';			// TODO! remove
+	buff[bytes_read] = '\0';			//TODO: remove
 	PRINT("<< " << buff);
 	stock.append(buff, bytes_read);
 

@@ -6,7 +6,7 @@
 # include <set>
 # include <algorithm>
 # include <ctime>
-# include <errno.h>
+# include <cerrno>
 
 # include <Client.hpp>
 
