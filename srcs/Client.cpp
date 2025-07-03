@@ -156,6 +156,18 @@ int Client::exec_cmd(const std::string &cmd)
 			join(split_cmd[1], split_cmd[2]);
 		break;
 
+	case PART:
+		if (split_cmd.size() < 2) {
+			send(ERR_NEEDMOREPARAMS(nickname, cmd));
+			return -1;
+		}
+		pos = cmd.find(':');
+		if (pos == std::string::npos)
+			part(split_cmd[1]);
+		else
+			part(split_cmd[1], cmd.substr(pos + 1));
+		break;
+
 	case PRIVMSG:
 		if (split_cmd.size() < 3) {
 			if (split_cmd.size() == 1)
@@ -248,7 +260,29 @@ int Client::join(const std::string &chan_name, const std::string key)
 			PRINT("Couldn't add_client");
 			continue ;
 		}
-		channels.insert(std::pair<const std::string, Channel &>(*it_chan, *chan));
+		channels.insert(std::pair<const std::string, Channel &>(*it_chan, *chan_ptr));
+	}
+	return 0;
+}
+
+int Client::part(const std::string &chan, const std::string reason)
+{
+	std::vector<std::string> chans_names = split_on_char(chan, ',');
+
+	for(std::vector<std::string>::iterator it_chan = chans_names.begin(); it_chan != chans_names.end(); ++it_chan)
+	{
+		Channel		*chan_ptr;
+
+		if ((*it_chan)[0] != '#') {
+			send(ERR_BADCHANMASK(*it_chan));
+			continue;
+		}
+		chan_ptr = serv.find_channel(*it_chan);
+		if (chan_ptr == NULL) {
+			send(ERR_NOSUCHCHANNEL(nickname, *it_chan));
+			continue;
+		}
+		chan_ptr->part(*this, reason);
 	}
 	return 0;
 }
@@ -277,12 +311,14 @@ int Client::privmsg(const std::string &target, const std::string &msg)
 
 int Client::kick(const std::string &chan, const std::string &user, const std::string &reason)
 {
-	std::map<const std::string, Channel &>::iterator it_chan = channels.find(chan);
-	if ( it_chan == channels.end()){
+	std::map<const std::string, Channel &>::iterator	it;
+
+	it = channels.find(chan);
+	if (it == channels.end()){
 		send(ERR_NOTONCHANNEL(nickname, chan));
 		return -1;
 	}
-	it_chan->second.kick(*this, user, reason);
+	it->second.kick(*this, user, reason);
 	return 0;
 }
 

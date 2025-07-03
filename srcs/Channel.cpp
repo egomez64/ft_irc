@@ -36,14 +36,19 @@ std::string Channel::modes_str() const
 	return modes_str;
 }
 
-void Channel::remove_client(const std::string &nickname)
+void Channel::remove_client(std::map<const std::string, Client &>::iterator client)
 {
-	clients.erase(nickname);
-	operators.erase(nickname);
+	client->second.remove_chan(name);
+	operators.erase(client->first);
+	clients.erase(client);
+
+	if (clients.empty())
+		server.remove_channel(*this);
 }
 
-Channel::Channel(const std::string &name, Client &client)
+Channel::Channel(const std::string &name, Client &client, Server &server)
 	: name(name)
+	, server(server)
 {
 	std::string		key;
 
@@ -85,6 +90,23 @@ int Channel::join(Client &client, const std::string &key)
 	return 0;
 }
 
+int Channel::part(Client &client, const std::string &reason)
+{
+	std::map<const std::string, Client &>::iterator		it;
+	it = clients.find(client.get_nickname());
+	if (it == clients.end()) {
+		client.send(ERR_NOTONCHANNEL(client.get_nickname(), name));
+		return -1;
+	}
+
+	if (reason.empty())
+		msg(RPL_PART(client.get_nickname(), name));
+	else
+		msg(RPL_PARTMESSAGE(client.get_nickname(), name, reason));
+	remove_client(it);
+	return 0;
+}
+
 int Channel::msg(const std::string &msg)
 {
 	for (std::map<const std::string, Client &>::iterator it = clients.begin(); it != clients.end(); it++)
@@ -109,20 +131,19 @@ bool Channel::is_operator(const std::string &nickname) const
 
 int Channel::kick(const Client &client, const std::string &target, const std::string &reason)
 {
-	std::set<std::string>::iterator it = std::find(operators.begin(), operators.end(), client.get_nickname());
+	std::map<const std::string, Client &>::iterator	target_it;
 
-	if (it == operators.end()) {
+	if (std::find(operators.begin(), operators.end(), client.get_nickname()) == operators.end()) {
 		client.send(ERR_CHANOPRIVSNEEDED(client.get_nickname(), name));
 		return -1;
 	}
-	std::map<const std::string, Client &>::iterator	target_it = clients.find(target);
+	target_it = clients.find(target);
 	if (target_it == clients.end()){
 		client.send(ERR_USERNOTINCHANNEL(client.get_nickname(), target, name));
 		return -1;
 	}
 	msg(RPL_KICK(client.get_nickname(), name, target, reason));
-	target_it->second.remove_chan(name);
-	remove_client(target);
+	remove_client(target_it);
 	return 0;
 }
 
@@ -309,6 +330,15 @@ int Channel::change_modes(Client &client, const std::string &str)
 		}
 	}
 	return 0;
+}
+
+void Channel::remove_client(Client &client)
+{
+	clients.erase(client.get_nickname());
+	operators.erase(client.get_nickname());
+
+	if (clients.empty())
+		server.remove_channel(*this);
 }
 
 void Channel::setTopic(const std::string &topic, const std::string &nick)

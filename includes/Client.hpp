@@ -27,6 +27,7 @@ private:
 		INVITE,
 		TOPIC,
 		MODE,
+		PART,
 		INVALID,
 	};
 
@@ -51,6 +52,7 @@ private:
 
 	// Commands
 	int		join(const std::string &chan, const std::string key = "");
+	int		part(const std::string &chan, const std::string reason = "Leaving");
 	int		privmsg(const std::string &target, const std::string &msg);
 	int		kick(const std::string &chan, const std::string &user, const std::string &reason);
 	int		invite(const std::string &target, const std::string &chan);

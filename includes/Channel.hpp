@@ -60,6 +60,7 @@ public:
 
 	// class methods
 	int		join(Client &, const std::string &key);
+	int		part(Client &, const std::string &reason);
 	int		msg(const std::string &msg);
 	int		msg(const Client &, const std::string &msg);
 
@@ -69,6 +70,8 @@ public:
 	int		see_topic(const Client & client);
 	int		change_topic(const Client & client, const std::string &);
 	int		change_modes(Client &, const std::string &);
+
+	void	remove_client(Client &);
 
 	// getters
 	const std::string	&getName() const		{ return name; }

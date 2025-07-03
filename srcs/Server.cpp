@@ -141,7 +141,7 @@ Server::Server(in_port_t port, const std::string &password)
 Server::~Server()
 {
 	for (std::map<const int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
-		remove_client(it->second);
+		close(it->first);
 	close(server_fd);
 	close(epoll_fd);
 	signal(SIGINT, SIG_DFL);
@@ -231,10 +231,33 @@ Channel *Server::find_channel(const std::string &chan)
 
 int Server::remove_client(const Client &client)
 {
+	int		err = 0;
+
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client.get_fd(), NULL) == -1) {
 		std::perror("epoll_ctl");
-		return -1;
+		err = -1;
 	}
-	close(client.get_fd());
+	if (close(client.get_fd()) == -1) {
+		std::perror("close");
+		err = -1;
+	}
+	std::map<const int, Client>::iterator	it;
+
+	it = clients.find(client.get_fd());
+	if (it == clients.end())
+		err = -1;
+
+	clients.erase(it);
+	return err;
+}
+
+int Server::remove_channel(const Channel &chan)
+{
+	std::map<const std::string, Channel>::iterator	it;
+	it = channels.find(chan.getName());
+	if (it == channels.end())
+		return -1;
+
+	channels.erase(it);
 	return 0;
 }

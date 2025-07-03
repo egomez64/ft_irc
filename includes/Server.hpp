@@ -61,6 +61,7 @@ public:
 	const Client	*find_client(const std::string &nickname) const;
 	Channel			*find_channel(const std::string &chan);
 	int				remove_client(const Client &);
+	int				remove_channel(const Channel &);
 	Channel			*add_client_to_chan(Client &, const std::string &channel, const std::string &key);
 
 	const std::string	&get_name() const			{ return name; }
