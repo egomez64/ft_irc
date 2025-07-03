@@ -229,6 +229,8 @@ int Client::exec_cmd(const std::string &cmd)
 				send(ERR_PASSWDMISMATCH(nickname));
 			else if (parse_cmd(split_cmd[0]) != INVALID)
 				send(ERR_NOTREGISTERED());
+			else
+				send(ERR_UNKNOWNCOMMAND(nickname, cmd));
 		}
 		else if (auth && parse_register(split_cmd[0]) != INVALID)
 			send(ERR_ALREADYREGISTRED(nickname));
@@ -323,8 +325,8 @@ int Client::kick(const std::string &chan, const std::string &user, const std::st
 
 int Client::invite(const std::string &target, const std::string &chan_name)
 {
-	Channel			*chan;
-	const Client	*invited;
+	Channel		*chan;
+	Client		*invited;
 
 	if ((chan = serv.find_channel(chan_name)) == NULL) {
 		send(ERR_NOSUCHCHANNEL(nickname, chan_name));
