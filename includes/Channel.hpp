@@ -62,13 +62,13 @@ public:
 	int		join(Client &, const std::string &key);
 	int		part(Client &, const std::string &reason);
 	int		msg(const std::string &msg);
-	int		msg(const Client &, const std::string &msg);
+	int		msg(Client &, const std::string &msg);
 
 	bool	is_operator(const std::string &) const;
-	int		kick(const Client& client, const std::string &target, const std::string &reason);
-	int		invite(const Client& client, const Client &target);
-	int		see_topic(const Client & client);
-	int		change_topic(const Client & client, const std::string &);
+	int		kick(Client& client, const std::string &target, const std::string &reason);
+	int		invite(Client& client, Client &target);
+	int		see_topic(Client & client);
+	int		change_topic(Client & client, const std::string &);
 	int		change_modes(Client &, const std::string &);
 
 	void	remove_client(Client &);

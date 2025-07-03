@@ -1,4 +1,4 @@
-#define CLIENT(nick, user)							(nick + "!" + user + "@localhost")
+#define CLIENT(nick, user)							((nick) + "!" + (user) + "@localhost")
 #define PRIVMSG(client, target, message)			(":" + client + " PRIVMSG " + target + " :" + message + "\r\n")
 
 #define RPL_JOIN(client, channel)					(":" + client + " JOIN " + channel + "\r\n")
@@ -22,11 +22,11 @@
 #define RPL_UMODEIS(client, user_modes)				(": 221 " + client + ' ' + user_modes + "\r\n")
 #define RPL_CHANNELMODEIS(client, channel, modes) 	(": 324 " + client + ' ' + channel + ' ' + modes + "\r\n")
 #define RPL_CREATIONTIME(client, channel, \
-	creationtime)									(": 329 " + client + ' ' + channel + ' ' + creationtime + "\r\n")
+	creationtime)									(": 329 " + (client) + ' ' + (channel) + ' ' + (creationtime) + "\r\n")
 #define RPL_NOTOPIC(client, channel)				(": 331 " + client + ' ' + channel + " :No topic is set\r\n")
 #define RPL_SEETOPIC(client, channel, topic)		(": 332 " + client + ' ' + channel + " :" + topic + "\r\n")
 #define RPL_TOPICWHOTIME(client, channel, nick, \
-	setat)											(": 333 " + client + ' ' + channel + ' ' + nick + ' ' + setat + "\r\n")
+	setat)											(": 333 " + (client) + ' ' + (channel) + ' ' + (nick) + ' ' + (setat) + "\r\n")
 #define RPL_INVITING(client, nick, channel)			(": 341 " + client + ' ' + nick + ' ' + channel + "\r\n")
 #define RPL_NAMREPLY(client, channel, nicknames)	(": 353 " + client + " = " + channel + " :" + nicknames + "\r\n")
 #define RPL_ENDOFNAMES(client, channel)				(": 366 " + client + ' ' + channel + " :End of /NAMES list.\r\n")

@@ -115,7 +115,7 @@ int Channel::msg(const std::string &msg)
 	return 0;
 }
 
-int Channel::msg(const Client &client, const std::string &msg)
+int Channel::msg(Client &client, const std::string &msg)
 {
 	for (std::map<const std::string, Client &>::iterator it = clients.begin(); it != clients.end(); it++) {
 		if (&it->second == &client)
@@ -130,7 +130,7 @@ bool Channel::is_operator(const std::string &nickname) const
 	return (std::find(operators.begin(), operators.end(), nickname) != operators.end());
 }
 
-int Channel::kick(const Client &client, const std::string &target, const std::string &reason)
+int Channel::kick(Client &client, const std::string &target, const std::string &reason)
 {
 	std::map<const std::string, Client &>::iterator	target_it;
 
@@ -148,7 +148,7 @@ int Channel::kick(const Client &client, const std::string &target, const std::st
 	return 0;
 }
 
-int Channel::invite(const Client &client, const Client &target)
+int Channel::invite(Client &client, Client &target)
 {
 	if (clients.find(client.get_nickname()) == clients.end()) {
 		client.send(ERR_NOTONCHANNEL(client.get_nickname(), name));
@@ -168,18 +168,18 @@ int Channel::invite(const Client &client, const Client &target)
 	return 0;
 }
 
-int Channel::see_topic(const Client &client)
+int Channel::see_topic(Client &client)
 {
 	if (this->topic.topic.empty())
 		client.send(RPL_NOTOPIC(client.get_nickname(), name));
 	else
 		client.send(RPL_SEETOPIC(client.get_nickname(), name, this->topic.topic));
 	if (!this->topic.nick.empty())
-		client.send(RPL_TOPICWHOTIME(client.get_nickname(), name, this->topic.nick, SSTR(this->topic.setat)));
+		client.send(RPL_TOPICWHOTIME(client.get_nickname(), name, this->topic.nick, (SSTR(this->topic.setat))));
 	return 0;
 }
 
-int Channel::change_topic(const Client &client, const std::string &topic)
+int Channel::change_topic(Client &client, const std::string &topic)
 {
 	if (modes.topic && operators.find(client.get_nickname()) == operators.end()) {
 		client.send(ERR_CHANOPRIVSNEEDED(client.get_nickname(), name));
@@ -194,7 +194,7 @@ int Channel::change_modes(Client &client, const std::string &str)
 {
 	if (str.empty()) {
 		client.send(RPL_CHANNELMODEIS(client.get_nickname(), name, modes_str()));
-		client.send(RPL_CREATIONTIME(client.get_nickname(), name, SSTR(std::time(NULL))));
+		client.send(RPL_CREATIONTIME(client.get_nickname(), name, (SSTR(std::time(NULL)))));
 		return 0;
 	}
 	if (!is_operator(client.get_nickname())) {

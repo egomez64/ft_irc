@@ -173,9 +173,9 @@ int Server::listenLoop()
 			else if (events[i].data.fd == server_fd)
 				acceptNew();
 			else if ((client = clients.find(events[i].data.fd)) != clients.end()) {
-				if (events[i].events & EPOLLOUT != 0)
+				if ((events[i].events & EPOLLOUT) != 0)
 					client->second.send("");
-				if (events[i].events & EPOLLIN != 0)
+				if ((events[i].events & EPOLLIN) != 0)
 					receive(client->second);
 			}
 			else
