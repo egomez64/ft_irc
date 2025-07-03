@@ -104,7 +104,8 @@ int Server::acceptNew()
 
 	epoll_event		client_event;
 	std::memset(&client_event, 0, sizeof (client_event));
-	client_event.events = EPOLLIN | EPOLLOUT;
+	// client_event.events = EPOLLIN | EPOLLOUT;
+	client_event.events = EPOLLIN;
 	client_event.data.fd = client_fd;
 
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1) {
@@ -174,7 +175,7 @@ int Server::listenLoop()
 				acceptNew();
 			else if ((client = clients.find(events[i].data.fd)) != clients.end()) {
 				if ((events[i].events & EPOLLOUT) != 0)
-					client->second.send("");
+					client->second.send();
 				if ((events[i].events & EPOLLIN) != 0)
 					receive(client->second);
 			}

@@ -68,6 +68,7 @@ public:
 
 	const std::string	&get_name() const			{ return name; }
 	std::string			get_creation_time() const	{ return std::string(std::ctime(&creation_time)); }
+	int					get_epoll_fd() const		{ return epoll_fd; }
 };
 
 #endif // SERVER_HPP

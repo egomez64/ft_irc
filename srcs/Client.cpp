@@ -402,6 +402,7 @@ Client::recv_e Client::receive()
 
 	ssize_t	bytes_read = recv(fd, buff, buff_size - 1, 0);
 	if (bytes_read == -1) {
+		// if (errno == EAGAIN || errno == EWOULDBLOCK) {}
 		// std::perror("recv");
 		return RECV_ERR;
 	}
@@ -413,7 +414,11 @@ Client::recv_e Client::receive()
 	}
 
 	buff[bytes_read] = '\0';			//TODO: remove
+	if (std::string(buff) == "\r\n")
+		return RECV_OK;
+
 	PRINT(nickname << " << " << buff);
+
 	input_stock.append(buff, bytes_read);
 
 	std::size_t		end_msg;
@@ -425,21 +430,55 @@ Client::recv_e Client::receive()
 	return RECV_OK;
 }
 
-int Client::send(const std::string &str)
+static int epollmod(int epoll_fd, uint32_t events, int fd)
 {
-	output_stock += str;
+	epoll_event		event_to_add;
+	std::memset(&event_to_add, 0, sizeof (event_to_add));
+	event_to_add.events = events;
+	event_to_add.data.fd = fd;
+	
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &event_to_add) == -1) {
+		std::perror("epoll_ctl");
+		return -1;
+	}
+	return 0;
+}
+
+int Client::send()
+{
 	if (output_stock.empty())
 		return 0;
 
 	ssize_t	sent = ::send(fd, output_stock.c_str(), output_stock.length(), MSG_NOSIGNAL);
+	// ssize_t	sent = ::send(fd, output_stock.c_str(), 5, MSG_NOSIGNAL);
 	if (sent == -1) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			epollmod(serv.get_epoll_fd(), EPOLLIN | EPOLLOUT, fd);
 			return 0;
+		}
 		std::perror("send");
 		return -1;
 	}
 	output_stock.erase(0, sent);
+
+	if (!output_stock.empty())
+		epollmod(serv.get_epoll_fd(), EPOLLIN | EPOLLOUT, fd);
+	else
+		epollmod(serv.get_epoll_fd(), EPOLLIN, fd);
 	return 0;
+
+	// ssize_t	sent = ::send(fd, str.c_str(), str.length(), MSG_NOSIGNAL);
+	// if (sent == -1) {
+	// 	std::perror("send");
+	// 	return -1;
+	// }
+	// return 0;
+}
+
+int Client::send(const std::string &str)
+{
+	output_stock += str;
+	return send();
 }
 
 int Client::remove_chan(const std::string &chan)

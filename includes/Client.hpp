@@ -73,6 +73,7 @@ public:
 	~Client() { /*close(fd);*/ }
 
 	recv_e	receive();
+	int		send();
 	int		send(const std::string &);
 
 	const int			&get_fd() const			{ return fd; }
