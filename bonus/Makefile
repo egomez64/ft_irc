@@ -1,15 +1,18 @@
-NAME	= censorbot
-CC		= c++
-CFLAGS	= -Wall -Werror -Wextra
-CFLAGS	+= --std=c++98
-INCLUDE	= includes
+NAME			= ../ircservBonus
+CC				= c++
+CFLAGS			= -Wall -Werror -Wextra
+CFLAGS			+= --std=c++98 -g
+INCLUDE			= includes
 
-SRC_DIR	= srcs
-DIR_DUP	= mkdir -p $(@D)
-OBJ_DIR	= .obj
+SRC_DIR		= srcs
+DIR_DUP		= mkdir -p $(@D)
+OBJ_DIR		= .obj
 
-SRC	= $(SRC_DIR)/main.cpp \
-	$(SRC_DIR)/Bot.cpp
+SRC		= $(SRC_DIR)/main.cpp \
+		$(SRC_DIR)/Server.cpp \
+		$(SRC_DIR)/Client.cpp \
+		$(SRC_DIR)/Channel.cpp \
+		$(SRC_DIR)/utils.cpp
 
 OBJ		:= $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 

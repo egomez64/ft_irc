@@ -1,5 +1,5 @@
 ircserv*
 censorbot*
-.obj/*
-bonus/.old/*
+.obj
+bonus/.obj
 .vscode/*

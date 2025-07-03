@@ -1,36 +1,46 @@
 #include <iostream>
 #include <limits>
 
-#include <Bot.hpp>
+#include <Server.hpp>
 
-bool	g_bot_running = true;
+Server	*g_serv_ptr = NULL;
 
 void	signal_handler(int)
 {
-	g_bot_running = false;
+	if (g_serv_ptr != NULL)
+		g_serv_ptr->closeServer();
+}
+
+static int	parse_port(char *port_str)
+{
+	int		port = std::atoi(port_str);
+	if (port <= 0 || port > std::numeric_limits<in_port_t>::max()) {
+		std::cerr << "Invalid port number" << std::endl;
+		return -1;
+	}
+	return port;
 }
 
 int main(int ac, char **av)
 {
-	Bot		*censorBot;
-	if (ac != 4) {
-		std::cout << "Usage: ./censorbot <IPv4> <port> <password>" << std::endl;
+	if (ac != 2 && ac != 3) {
+		std::cerr << "Usage: ./ircserv <port> [<password>]" << std::endl;
+		return 1;
+	}
 
-		censorBot = new Bot(g_bot_running);
-	}
-	else {
-		int		port = Bot::parse_port(av[2]);
-		if (port == -1)
-			return 1;
-	
-		censorBot = new Bot(g_bot_running, av[1], port, av[3]);
-	}
-	if (censorBot == NULL)
+	int		port = parse_port(av[1]);
+	if (port == -1)
 		return 1;
 
-	signal(SIGINT, signal_handler);
+	std::string	password;
+	if (ac == 3)
+		password = av[2];
 
-	if (censorBot->listenLoop() == -1)
+	Server	server(port, password);
+
+	g_serv_ptr = &server;
+
+	if (server.listenLoop() == -1)
 		return 1;
 
 	return 0;
