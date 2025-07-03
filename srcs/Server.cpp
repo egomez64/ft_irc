@@ -104,7 +104,7 @@ int Server::acceptNew()
 
 	epoll_event		client_event;
 	std::memset(&client_event, 0, sizeof (client_event));
-	client_event.events = EPOLLIN;
+	client_event.events = EPOLLIN | EPOLLOUT;
 	client_event.data.fd = client_fd;
 
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_event) == -1) {
@@ -128,7 +128,7 @@ int Server::receive(Client &client)
 }
 
 Server::Server(in_port_t port, const std::string &password)
-	: name("ircserv")
+	: name("ircserv@localhost")
 	, password(password)
 	, running(true)
 {
@@ -155,6 +155,8 @@ int Server::listenLoop()
 	while (running) {
 		int		n_fds;
 		if ((n_fds = epoll_wait(epoll_fd, events, max_events, -1)) == -1) {
+			if (errno == EINTR)
+				break;
 			std::perror("epoll_wait");
 			return -1;
 		}
@@ -165,15 +167,17 @@ int Server::listenLoop()
 			if (events[i].data.fd == STDIN_FILENO) {
 				std::string		input;
 				std::getline(std::cin, input);
-				if (input == "quit" || input == "exit") {
+				if (input == "quit" || input == "exit")
 					running = false;
-					return 0;
-				}
 			}
 			else if (events[i].data.fd == server_fd)
 				acceptNew();
-			else if ((client = clients.find(events[i].data.fd)) != clients.end())
-				receive(client->second);
+			else if ((client = clients.find(events[i].data.fd)) != clients.end()) {
+				if (events[i].events & EPOLLOUT != 0)
+					client->second.send("");
+				if (events[i].events & EPOLLIN != 0)
+					receive(client->second);
+			}
 			else
 				PRINT("\tunknown event_fd: " << events[i].data.fd);
 		}
@@ -193,11 +197,12 @@ Channel *Server::add_client_to_chan(Client &client, const std::string &chan_name
 		return chan;
 	}
 	else {
-		std::pair<std::map<const std::string, Channel>::iterator, bool>
-			inserted = channels.insert(std::make_pair(chan_name, Channel(chan_name, client)));
+		std::pair<std::map<const std::string, Channel>::iterator, bool>		inserted;
 
+		inserted = channels.insert(std::make_pair(chan_name, Channel(chan_name, client, *this)));
 		if (!inserted.second)
 			return NULL;
+
 		return &inserted.first->second;
 	}
 }
@@ -211,9 +216,9 @@ bool Server::test_nickname(const std::string &nickname) const
 	return true;
 }
 
-const Client *Server::find_client(const std::string &nickname) const
+Client *Server::find_client(const std::string &nickname)
 {
-	for (std::map<const int, Client>::const_iterator it = clients.begin(); it != clients.end(); it++) {
+	for (std::map<const int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
 		if (it->second.get_nickname() == nickname)
 			return &it->second;
 	}

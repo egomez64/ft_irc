@@ -84,7 +84,8 @@ int Channel::join(Client &client, const std::string &key)
 		client.send(RPL_NOTOPIC(client.get_nickname(), name));
 	else
 		client.send(RPL_TOPIC(client.get_nickname(), name, topic.topic));
-	client.send(RPL_TOPICWHOTIME(client.get_nickname(), name, topic.nick, SSTR(topic.setat)));
+	if (!topic.nick.empty())
+		client.send(RPL_TOPICWHOTIME(client.get_nickname(), name, topic.nick, SSTR(topic.setat)));
 	client.send(RPL_NAMREPLY(nickname, name, users_str()));
 	client.send(RPL_ENDOFNAMES(nickname, name));
 	return 0;
@@ -147,23 +148,23 @@ int Channel::kick(const Client &client, const std::string &target, const std::st
 	return 0;
 }
 
-int Channel::invite(const Client &client, const Client *target)
+int Channel::invite(const Client &client, const Client &target)
 {
 	if (clients.find(client.get_nickname()) == clients.end()) {
 		client.send(ERR_NOTONCHANNEL(client.get_nickname(), name));
 		return -1;
 	}
-	if (operators.find(client.get_nickname()) == operators.end()) {
+	if (modes.invite && operators.find(client.get_nickname()) == operators.end()) {
 		client.send(ERR_CHANOPRIVSNEEDED(client.get_nickname(), name));
 		return -1;
 	}
-	if (clients.find(target->get_nickname()) != clients.end()) {
-		client.send(ERR_USERONCHANNEL(client.get_nickname(), target->get_nickname(), name));
+	if (clients.find(target.get_nickname()) != clients.end()) {
+		client.send(ERR_USERONCHANNEL(client.get_nickname(), target.get_nickname(), name));
 		return -1;
 	}
-	invite_list.insert(target->get_nickname());
-	client.send(RPL_INVITING(client.get_nickname(), target->get_nickname(), name));
-	target->send(RPL_INVITERCVR(client.get_nickname(), target->get_nickname(), name));
+	invite_list.insert(target.get_nickname());
+	client.send(RPL_INVITING(client.get_nickname(), target.get_nickname(), name));
+	target.send(RPL_INVITERCVR(client.get_nickname(), target.get_nickname(), name));
 	return 0;
 }
 
@@ -173,7 +174,8 @@ int Channel::see_topic(const Client &client)
 		client.send(RPL_NOTOPIC(client.get_nickname(), name));
 	else
 		client.send(RPL_SEETOPIC(client.get_nickname(), name, this->topic.topic));
-	client.send(RPL_TOPICWHOTIME(client.get_nickname(), name, this->topic.nick, SSTR(this->topic.setat)));
+	if (!this->topic.nick.empty())
+		client.send(RPL_TOPICWHOTIME(client.get_nickname(), name, this->topic.nick, SSTR(this->topic.setat)));
 	return 0;
 }
 

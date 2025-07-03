@@ -18,6 +18,8 @@
 # include <Client.hpp>
 # include <Channel.hpp>
 
+# define autodef(var, val) __typeof(val) var = val
+
 class Client;
 class Channel;
 
@@ -58,7 +60,7 @@ public:
 
 	bool			test_password(const std::string &str) const { return str == password ;}
 	bool			test_nickname(const std::string &nickname) const;
-	const Client	*find_client(const std::string &nickname) const;
+	Client			*find_client(const std::string &nickname);
 	Channel			*find_channel(const std::string &chan);
 	int				remove_client(const Client &);
 	int				remove_channel(const Channel &);

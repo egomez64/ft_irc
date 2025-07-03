@@ -46,6 +46,11 @@ int BotServer::authentificate()
 	return send(to_send);
 }
 
+bool BotServer::try_new_nickname()
+{
+	if ()
+}
+
 int BotServer::exec_reply(const std::string &repl)
 {
 	std::vector<std::string>	split_repl = split(repl);
@@ -126,16 +131,17 @@ int BotServer::exec_reply(const std::string &repl)
 		send("PONG " + repl.substr(repl.find_first_of(' ') + 1) + "\r\n");
 		break;
 
-	// case JOIN:
-	// 	if (split_repl.size() < 2) {
-	// 		send(ERR_NEEDMOREPARAMS(nickname, repl));
-	// 		return -1;
-	// 	}
-	// 	if (split_repl.size() == 2)
-	// 		join(split_repl[1]);
-	// 	else
-	// 		join(split_repl[1], split_repl[2]);
-	// 	break;
+	case JOIN:
+		// if (split_repl.size() < 2) {
+		// 	send(ERR_NEEDMOREPARAMS(nickname, repl));
+		// 	return -1;
+		// }
+		// if (split_repl.size() == 2)
+		// 	join(split_repl[1]);
+		// else
+		// 	join(split_repl[1], split_repl[2]);
+		join_channel(split_repl[2]);
+		break;
 
 	// case PRIVMSG:
 	// 	if (split_repl.size() < 3) {
@@ -148,7 +154,7 @@ int BotServer::exec_reply(const std::string &repl)
 	// 	privmsg(split_repl[1], PRIVMSG(nickname, split_repl[1], repl.substr(repl.find_first_of(':') + 1)));
 	// 	break;
 	
-	// case KICK:
+	case KICK:
 	// 	// if (split_repl.size() < 3) {
 	// 	// 	send(ERR_NEEDMOREPARAMS(nickname, repl));
 	// 	// 	return -1;
@@ -158,14 +164,14 @@ int BotServer::exec_reply(const std::string &repl)
 	// 		kick(split_repl[1], split_repl[2], "No reason specified");
 	// 	else
 	// 		kick(split_repl[1], split_repl[2], repl.substr(pos + 1));
-	// 	break;
+		break;
 
 	case INVITE:
 		// if (split_repl.size() < 3) {
 		// 	send(ERR_NEEDMOREPARAMS(nickname, repl));
 		// 	return -1;
 		// }
-		join(split_repl[1], split_repl[2]);
+		invited(split_repl[3]);
 		break;
 
 	// case TOPIC:
@@ -213,6 +219,16 @@ int BotServer::exec_reply(const std::string &repl)
 	return 0;
 }
 
+int BotServer::join_channel(const std::string &channel)
+{
+	std::pair<std::map<const std::string, BotChannel>::iterator, bool>	inserted;
+
+	inserted = channels.insert(std::make_pair(channel, BotChannel(channel)));
+	if (!inserted.second)
+		return -1;
+	return 0;
+}
+
 BotServer::BotServer(const std::string &ip, in_port_t port, const std::string &password)
 	: ip(ip)
 	, port(port)
@@ -245,8 +261,8 @@ BotServer::recv_e BotServer::receive()
 
 	std::size_t		end_msg;
 	while ((end_msg = stock.find("\r\n")) != std::string::npos) {
-		std::string		cmd(stock, 0, end_msg);
-		// exec_cmd(cmd);
+		std::string		reply(stock, 0, end_msg);
+		parse_repl(reply);
 		stock.erase(0, end_msg + 2);
 	}
 	return RECV_OK;

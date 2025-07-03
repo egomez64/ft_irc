@@ -43,20 +43,20 @@ private:
 
 	std::string	name;
 	topic_t		topic;
+	modes_t		modes;
+	Server		&server;
 
 	std::map<const std::string, Client &>	clients;
 	std::set<std::string>					operators;
 	std::set<std::string>					invite_list;
 
-	modes_t		modes;
-
 	std::string		users_str() const;
 	std::string		modes_str() const;
-	void			remove_client(const std::string &nickname);
+	void			remove_client(std::map<const std::string, Client &>::iterator client);
 
 public:
 	// constructor
-	Channel(const std::string &name, Client &);
+	Channel(const std::string &name, Client &, Server &);
 
 	// class methods
 	int		join(Client &, const std::string &key);
@@ -66,7 +66,7 @@ public:
 
 	bool	is_operator(const std::string &) const;
 	int		kick(const Client& client, const std::string &target, const std::string &reason);
-	int		invite(const Client& client, const Client *target);
+	int		invite(const Client& client, const Client &target);
 	int		see_topic(const Client & client);
 	int		change_topic(const Client & client, const std::string &);
 	int		change_modes(Client &, const std::string &);

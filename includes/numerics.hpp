@@ -16,8 +16,8 @@
 #define RPL_YOURHOST(client, servername, version)	(": 002 " + client + " :Your host is " + servername + ", running version " + version + "\r\n")
 #define RPL_CREATED(client, datetime)				(": 003 " + client + " :This server was created " + datetime + "\r\n")
 #define RPL_MYINFO(client, servername, version,\
-	user_modes, c_modes, c_modes_param)				(": 004 " + client + ' ' + servername + ' ' + version + ' ' + user_modes + ' ' + c_modes + ' '\
-														+ c_modes_param + "\r\n")
+	user_modes, chan_modes, chan_modes_param)		(": 004 " + client + ' ' + servername + ' ' + version\
+														+ ' ' + user_modes + ' ' + chan_modes + ' ' + chan_modes_param + "\r\n")
 #define RPL_ISUPPORT(client, tokens)				(": 005 " + client + ' ' + tokens + " :are supported by this server\r\n")
 #define RPL_UMODEIS(client, user_modes)				(": 221 " + client + ' ' + user_modes + "\r\n")
 #define RPL_CHANNELMODEIS(client, channel, modes) 	(": 324 " + client + ' ' + channel + ' ' + modes + "\r\n")
@@ -30,9 +30,10 @@
 #define RPL_INVITING(client, nick, channel)			(": 341 " + client + ' ' + nick + ' ' + channel + "\r\n")
 #define RPL_NAMREPLY(client, channel, nicknames)	(": 353 " + client + " = " + channel + " :" + nicknames + "\r\n")
 #define RPL_ENDOFNAMES(client, channel)				(": 366 " + client + ' ' + channel + " :End of /NAMES list.\r\n")
-#define RPL_MOTD(client, line)						(": 372 " + client + ' ' + line + "\r\n")
+#define RPL_MOTD(client, line)						(": 372 " + client + " :- " + line + "\r\n")
+#define RPL_MOTDSTART(client, line)					(": 375 " + client + " :- " + line + "\r\n")
+#define RPL_ENDOFMOTD(client)						(": 376 " + client + " :End of /MOTD command.\r\n")
 
-#define ERR_TOOMUCHPARAMS(client, cmd)				(client + ' ' + cmd + " :Too much parameters\r\n")
 #define ERR_NOSUCHNICK(client, nickname) 			(": 401 " + client + ' ' + nickname + " :No such nick/channel\r\n")
 #define ERR_NOSUCHCHANNEL(client, channel)			(": 403 " + client + ' ' + channel + " :No such channel\r\n")
 #define ERR_CANNOTSENDTOCHAN(client, channel)		(": 404 " + client + ' ' + channel + " :Cannot send to channel\r\n")
@@ -47,7 +48,7 @@
 #define ERR_USERONCHANNEL(client, nick, channel)	(": 443 " + client + ' ' + nick + ' ' + channel + " :is already on channel\r\n")
 #define ERR_NOTREGISTERED()							(": 451 :You have not registered\r\n")
 #define ERR_NEEDMOREPARAMS(client, cmd)				(": 461 " + client + ' ' + cmd + " :Not enough parameters\r\n")
-#define ERR_ALREADYREGISTRED(client)				(": 462 " + client + " ::Unauthorized command (already registered)\r\n")
+#define ERR_ALREADYREGISTRED(client)				(": 462 " + client + " :You may not reregister\r\n")
 #define ERR_PASSWDMISMATCH(client)					(": 464 " + client + " :Password incorrect\r\n")
 #define ERR_KEYSET(client, channel)					(": 467 " + client + ' ' + channel + " :Channel key already set\r\n")
 #define ERR_CHANNELISFULL(client, channel)			(": 471 " + client + ' ' + channel + " :Cannot join channel (+l)\r\n")

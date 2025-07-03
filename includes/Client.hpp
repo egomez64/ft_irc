@@ -41,7 +41,8 @@ private:
 
 	std::map<const std::string, Channel &>	channels;
 
-	std::string	stock;
+	std::string	input_stock;
+	std::string	output_stock;
 
 	static cmds		parse_register(const std::string &);
 	static cmds		parse_cmd(const std::string &);
@@ -72,7 +73,7 @@ public:
 	~Client() { /*close(fd);*/ }
 
 	recv_e	receive();
-	int		send(const std::string &) const;
+	int		send(const std::string &);
 
 	const int			&get_fd() const			{ return fd; }
 	const std::string	&get_nickname() const	{ return nickname; }

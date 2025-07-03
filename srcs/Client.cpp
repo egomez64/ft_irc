@@ -14,6 +14,7 @@ Client::cmds Client::parse_cmd(const std::string &str)
 	if (str == "NICK")			return NICK;
 	else if (str == "PING")		return PING;
 	else if (str == "JOIN")		return JOIN;
+	else if (str == "PART")		return PART;
 	else if (str == "PRIVMSG")	return PRIVMSG;
 	else if (str == "KICK")		return KICK;
 	else if (str == "INVITE")	return INVITE;
@@ -59,10 +60,6 @@ void Client::set_auth()
 		"CHANTYPES=# "
 		"PREFIX=(o)@"
 	);
-	const std::string	message_of_the_day(
-		"Welcome to ft_IRC.\n"
-		"We hope you have a good time on our server!"
-	);
 
 	send(RPL_WELCOME(nickname, username));
 	send(RPL_YOURHOST(nickname, serv.get_name(), version));
@@ -70,7 +67,10 @@ void Client::set_auth()
 	send(RPL_MYINFO(nickname, serv.get_name(), version, user_modes, c_modes, c_modes_param));
 	send(RPL_ISUPPORT(nickname, support_tokens));
 
-	send(RPL_MOTD(nickname, message_of_the_day));
+	send(RPL_MOTDSTART(nickname, "ircserv Message of the Day -"));
+	send(RPL_MOTD(nickname, "Welcome to ft_IRC."));
+	send(RPL_MOTD(nickname, "We hope you have a good time on our server!"));
+	send(RPL_ENDOFMOTD(nickname));
 }
 
 int Client::exec_cmd(const std::string &cmd)
@@ -117,7 +117,6 @@ int Client::exec_cmd(const std::string &cmd)
 			set_auth();
 		}
 		else {
-			PRINT("new nickname: " << split_cmd[1]);
 			send_friends(RPL_NICK(nickname, split_cmd[1]));
 			send(RPL_NICK(nickname, split_cmd[1]));
 			nickname = split_cmd[1];
@@ -142,7 +141,7 @@ int Client::exec_cmd(const std::string &cmd)
 			send(ERR_NEEDMOREPARAMS(nickname, cmd));
 			return -1;
 		}
-		send("PONG " + serv.get_name() + cmd.substr(cmd.find_first_of(' ') + 1) + "\r\n");
+		send(":" + serv.get_name() + " PONG " + serv.get_name() + " :" + cmd.substr(cmd.find(' ') + 1) + "\r\n");
 		break;
 
 	case JOIN:
@@ -176,7 +175,7 @@ int Client::exec_cmd(const std::string &cmd)
 				send(ERR_NOTEXTTOSEND(nickname));
 			return -1;
 		}
-		privmsg(split_cmd[1], PRIVMSG(nickname, split_cmd[1], cmd.substr(cmd.find_first_of(':') + 1)));
+		privmsg(split_cmd[1], PRIVMSG(nickname, split_cmd[1], cmd.substr(cmd.find(':') + 1)));
 		break;
 	
 	case KICK:
@@ -184,7 +183,7 @@ int Client::exec_cmd(const std::string &cmd)
 			send(ERR_NEEDMOREPARAMS(nickname, cmd));
 			return -1;
 		}
-		pos = cmd.find_first_of(':');
+		pos = cmd.find(':');
 		if (pos == std::string::npos)
 			kick(split_cmd[1], split_cmd[2], "No reason specified");
 		else
@@ -204,7 +203,7 @@ int Client::exec_cmd(const std::string &cmd)
 			send(ERR_NEEDMOREPARAMS(nickname, cmd));
 			return -1;
 		}
-		pos = cmd.find_first_of(':');
+		pos = cmd.find(':');
 		if (pos == std::string::npos) {
 			see_topic(split_cmd[1]);
 			break;
@@ -221,7 +220,7 @@ int Client::exec_cmd(const std::string &cmd)
 			mode(split_cmd[1], "");
 			break;
 		}
-		mode(split_cmd[1], cmd.substr(cmd.find_first_of(' ', cmd.find_first_of(' ') + 1) + 1));
+		mode(split_cmd[1], cmd.substr(cmd.find(' ', cmd.find(' ') + 1) + 1));
 		break;
 
 	case INVALID:
@@ -243,22 +242,22 @@ int Client::exec_cmd(const std::string &cmd)
 	return 0;
 }
 
-int Client::join(const std::string &chan_name, const std::string key)
+int Client::join(const std::string &chan, const std::string key)
 {
-	std::vector<std::string> chans_names = split_on_char(chan_name, ',');
+	std::vector<std::string> chans_names = split_on_char(chan, ',');
 	std::vector<std::string> keys = split_on_char(key, ',');
 
 	for(std::vector<std::string>::iterator it_chan = chans_names.begin(), it_key = keys.begin(); it_chan != chans_names.end(); ++it_chan, ++it_key)
 	{
-		Channel		*chan;
+		Channel		*chan_ptr;
 
 		if ((*it_chan)[0] != '#') {
 			send(ERR_BADCHANMASK(*it_chan));
-			continue ;
+			continue;
 		}
-		if ((chan = serv.add_client_to_chan(*this, *it_chan, *it_key)) == NULL) {
+		if ((chan_ptr = serv.add_client_to_chan(*this, *it_chan, *it_key)) == NULL) {
 			PRINT("Couldn't add_client");
-			continue ;
+			continue;
 		}
 		channels.insert(std::pair<const std::string, Channel &>(*it_chan, *chan_ptr));
 	}
@@ -299,7 +298,7 @@ int Client::privmsg(const std::string &target, const std::string &msg)
 		it_chan->second.msg(*this, msg);
 	}
 	else {
-		const Client	*client;
+		Client	*client;
 		if ((client = serv.find_client(target)) == NULL) {
 			send(ERR_NOSUCHNICK(nickname, target));
 			return -1;
@@ -325,17 +324,17 @@ int Client::kick(const std::string &chan, const std::string &user, const std::st
 int Client::invite(const std::string &target, const std::string &chan_name)
 {
 	Channel			*chan;
-	const Client	*invitee;
+	const Client	*invited;
 
 	if ((chan = serv.find_channel(chan_name)) == NULL) {
 		send(ERR_NOSUCHCHANNEL(nickname, chan_name));
 		return -1;
 	}
-	if ((invitee = serv.find_client(target)) == NULL) {
+	if ((invited = serv.find_client(target)) == NULL) {
 		send(ERR_NOSUCHNICK(nickname, target));
 		return -1;
 	}
-	chan->invite(*this, invitee);
+	chan->invite(*this, *invited);
 	return 0;
 }
 
@@ -373,7 +372,7 @@ int Client::mode(const std::string &target, const std::string &str)
 	std::map<const std::string, Channel &>::iterator	it_chan;
 
 	if ((it_chan = channels.find(target)) == channels.end()) {
-		send (ERR_NOSUCHCHANNEL(nickname, target));
+		send(ERR_NOSUCHCHANNEL(nickname, target));
 		return -1;
 	}
 	return it_chan->second.change_modes(*this, str);
@@ -406,29 +405,38 @@ Client::recv_e Client::receive()
 	}
 	else if (bytes_read == 0) {
 		send_friends(RPL_QUIT(nickname, "Connection closed"));
+		for (autodef(it, channels.begin()); it != channels.end(); ++it)
+			it->second.remove_client(*this);
 		return RECV_OVER;
 	}
 
 	buff[bytes_read] = '\0';			//TODO: remove
-	PRINT("<< " << buff);
-	stock.append(buff, bytes_read);
+	PRINT(nickname << " << " << buff);
+	input_stock.append(buff, bytes_read);
 
 	std::size_t		end_msg;
-	while ((end_msg = stock.find("\r\n")) != std::string::npos) {
-		std::string		cmd(stock, 0, end_msg);
+	while ((end_msg = input_stock.find("\r\n")) != std::string::npos) {
+		std::string		cmd(input_stock, 0, end_msg);
 		exec_cmd(cmd);
-		stock.erase(0, end_msg + 2);
+		input_stock.erase(0, end_msg + 2);
 	}
 	return RECV_OK;
 }
 
-int Client::send(const std::string &str) const
+int Client::send(const std::string &str)
 {
-	ssize_t	sent = ::send(fd, str.c_str(), str.length(), MSG_NOSIGNAL);
+	output_stock += str;
+	if (output_stock.empty())
+		return 0;
+
+	ssize_t	sent = ::send(fd, output_stock.c_str(), output_stock.length(), MSG_NOSIGNAL);
 	if (sent == -1) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK)
+			return 0;
 		std::perror("send");
 		return -1;
 	}
+	output_stock.erase(0, sent);
 	return 0;
 }
 

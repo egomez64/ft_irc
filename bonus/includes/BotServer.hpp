@@ -60,10 +60,13 @@ private:
 
 	static repls	parse_register(const std::string &);
 	static repls	parse_repl(const std::string &);
-	static bool		test_nickname(std::string &);
+	static bool		try_new_nickname();
 	void			set_auth();
 
 	int		exec_reply(const std::string &);
+
+	int		invited(const std::string &channel);
+	int		join_channel(const std::string &channel);
 
 public:
 	enum recv_e {
