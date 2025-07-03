@@ -175,7 +175,7 @@ int Server::listenLoop()
 				acceptNew();
 			else if ((client = clients.find(events[i].data.fd)) != clients.end()) {
 				if ((events[i].events & EPOLLOUT) != 0)
-					client->second.send();
+					client->second.send("");
 				if ((events[i].events & EPOLLIN) != 0)
 					receive(client->second);
 			}

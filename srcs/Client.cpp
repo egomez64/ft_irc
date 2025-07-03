@@ -402,8 +402,6 @@ Client::recv_e Client::receive()
 
 	ssize_t	bytes_read = recv(fd, buff, buff_size - 1, 0);
 	if (bytes_read == -1) {
-		// if (errno == EAGAIN || errno == EWOULDBLOCK) {}
-		// std::perror("recv");
 		return RECV_ERR;
 	}
 	else if (bytes_read == 0) {
@@ -414,10 +412,8 @@ Client::recv_e Client::receive()
 	}
 
 	buff[bytes_read] = '\0';			//TODO: remove
-	if (std::string(buff) == "\r\n")
-		return RECV_OK;
-
-	PRINT(nickname << " << " << buff);
+	if (std::string(buff) != "\r\n")
+		PRINT(nickname << " << " << buff);
 
 	input_stock.append(buff, bytes_read);
 
